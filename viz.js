@@ -1,6 +1,52 @@
+/* One motion preference controls every instrument, including live OS changes. */
+var portfolioMotion = (function () {
+  var preference = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var paused = false;
+  try { paused = localStorage.getItem('portfolio-motion-paused') === 'true'; } catch (error) {}
+  var tasks = [];
+  var button = document.querySelector('.motion-toggle');
+  function update() {
+    var stopped = paused || preference.matches || document.hidden;
+    tasks.forEach(function (task) {
+      if (stopped || !task.visible) {
+        clearInterval(task.timer);
+        task.timer = null;
+      } else if (!task.timer) task.timer = setInterval(task.frame, task.delay);
+    });
+    if (button) {
+      button.hidden = false;
+      button.disabled = preference.matches;
+      button.setAttribute('aria-pressed', String(paused || preference.matches));
+      button.textContent = preference.matches ? 'Reduced motion on' : 'Pause animations';
+      button.title = preference.matches ? 'Animations are paused by your device’s reduced motion preference.' : 'Pause or resume all animated figures';
+    }
+  }
+  var observer = 'IntersectionObserver' in window ? new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      tasks.forEach(function (task) { if (task.element === entry.target) task.visible = entry.isIntersecting; });
+    });
+    update();
+  }) : null;
+  if (button) button.addEventListener('click', function () {
+    paused = !paused;
+    try { localStorage.setItem('portfolio-motion-paused', String(paused)); } catch (error) {}
+    update();
+  });
+  preference.addEventListener('change', update);
+  document.addEventListener('visibilitychange', update);
+  update();
+  return {
+    add: function (frame, delay, element) {
+      if (!element) return;
+      tasks.push({ frame: frame, delay: delay, element: element, visible: !observer, timer: null });
+      if (observer) observer.observe(element);
+      update();
+    }
+  };
+})();
+
 /* v10: Fig. 01 persistent percentile separation under offered load */
 (function () {
-  var RM = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var NS = "http://www.w3.org/2000/svg";
   var F = [];
 
@@ -8,7 +54,9 @@
   var gLine = document.getElementById("plines");
   var gLab = document.getElementById("plabels");
   if (gGrid && gLine && gLab) {
-    var W = 900, H = 300, PAD = 64, N = 420, PW = W - PAD;
+    var chart = document.getElementById('pct');
+    var W = Math.max(240, chart.clientWidth), H = 300, PAD = 78, N = 420, PW = W - PAD;
+    chart.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
     var PLOT_TOP = 20, PLOT_BOTTOM = 216;
     var LOAD_TOP = 257, LOAD_BOTTOM = 289;
     var LO = Math.log10(0.5), HI = Math.log10(2000);
@@ -170,10 +218,10 @@
     var loadLabel = document.createElementNS(NS, "text");
     loadLabel.setAttribute("x", 0);
     loadLabel.setAttribute("y", 252);
-    loadLabel.setAttribute("font-size", "9");
+    loadLabel.setAttribute("font-size", "12");
     loadLabel.setAttribute("font-family", "IBM Plex Mono,ui-monospace,Menlo,monospace");
     loadLabel.setAttribute("letter-spacing", ".1em");
-    loadLabel.setAttribute("fill", "#5c5854");
+    loadLabel.setAttribute("fill", "#aaa49c");
     loadLabel.textContent = "offered load";
     gGrid.appendChild(loadLabel);
 
@@ -186,7 +234,7 @@
     gGrid.appendChild(loadPath);
 
     var SER = [
-      { k: "mean", n: "mean", o: 0.3, w: 1, c: "#4ecf8a" },
+      { k: "mean", n: "mean", o: 0.85, w: 1.5, c: "#4ecf8a" },
       { k: "p99", n: "p99", o: 0.62, w: 1.15, c: "#4ecf8a" },
       { k: "p999", n: "p99.9", o: 0.94, w: 1.3, c: "#a5d9b6" },
       { k: "p9999", n: "p99.99", o: 0.98, w: 1.5, c: "#d4786a" }
@@ -200,17 +248,19 @@
       polyline.setAttribute("stroke-opacity", sr.o);
       polyline.setAttribute("stroke-linejoin", "round");
       polyline.setAttribute("stroke-linecap", "round");
+      if (sr.k === "mean") polyline.setAttribute("stroke-dasharray", "2 4");
+      if (sr.k === "p99") polyline.setAttribute("stroke-dasharray", "7 4");
       gLine.appendChild(polyline);
       sr.el = polyline;
 
       var label = document.createElementNS(NS, "text");
       label.setAttribute("x", W - 4);
       label.setAttribute("text-anchor", "end");
-      label.setAttribute("font-size", "10");
+      label.setAttribute("font-size", "12");
       label.setAttribute("font-family", "IBM Plex Mono,ui-monospace,Menlo,monospace");
       label.setAttribute("letter-spacing", ".08em");
       label.setAttribute("fill", sr.c);
-      label.setAttribute("fill-opacity", Math.max(0.62, sr.o));
+      label.setAttribute("fill-opacity", 1);
       label.textContent = sr.n;
       gLab.appendChild(label);
       sr.tx = label;
@@ -251,6 +301,16 @@
       drawLoad();
     }
 
+    function resizeChart() {
+      W = Math.max(240, chart.clientWidth);
+      PW = W - PAD;
+      chart.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
+      gGrid.querySelectorAll('line').forEach(function (line) { line.setAttribute('x2', PW); });
+      SER.forEach(function (sr) { sr.tx.setAttribute('x', W - 4); });
+      draw();
+    }
+    if ('ResizeObserver' in window) new ResizeObserver(resizeChart).observe(chart);
+    else window.addEventListener('resize', resizeChart);
     draw();
     F.push(function () {
       clock++;
@@ -261,23 +321,10 @@
   }
 
   F.forEach(function (f) { f(); });
-  if (RM) return;
-  var t = null;
-  function frame() {
+  portfolioMotion.add(function () {
     F.forEach(function (f) { f(); });
-  }
-  function start() {
-    if (!t && !document.hidden) t = setInterval(frame, 80);
-  }
-  function stop() {
-    if (t) clearInterval(t);
-    t = null;
-  }
-  start();
-  document.addEventListener("visibilitychange", function () {
-    if (document.hidden) stop();
-    else start();
-  });
+  }, 80, document.getElementById('pct'));
+
 })();
 
 (function () {
@@ -367,20 +414,18 @@
   build();
   window.addEventListener("resize", build);
   window.addEventListener("load", build);
-  if (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-  setInterval(function () {
+  portfolioMotion.add(function () {
     (svg._a || []).forEach(function (a) {
       a.o = (a.o + 1.2) % a.p;
       a.e.setAttribute("stroke-dashoffset", -a.o);
     });
-  }, 34);
+  }, 34, svg);
 })();
 
 /* Common symptoms: each figure moves as the diagnosis, not as a chart chrome. */
 (function () {
-  var RM = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var cards = document.querySelectorAll("[data-sym]");
-  if (!cards.length || RM) return;
+  if (!cards.length) return;
 
   function rng(seed) {
     var s = seed >>> 0;
@@ -506,19 +551,10 @@
     else if (kind === "steps") F.push(trace(svg, ySteps, 0x57e9));
   });
 
-  var t = setInterval(function () {
+  portfolioMotion.add(function () {
     F.forEach(function (f) { f(); });
-  }, 80);
-  document.addEventListener("visibilitychange", function () {
-    if (document.hidden) {
-      clearInterval(t);
-      t = null;
-    } else if (!t) {
-      t = setInterval(function () {
-        F.forEach(function (f) { f(); });
-      }, 80);
-    }
-  });
+  }, 80, document.querySelector('.syms'));
+
 })();
 
 /* What I measure: restrained, deterministic instrument motion. */
@@ -526,8 +562,6 @@
   var rows = document.querySelectorAll("[data-measure]");
   if (!rows.length) return;
 
-  var RM = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (RM) return;
 
   function rng(seed) {
     var s = seed >>> 0;
@@ -742,38 +776,10 @@
     });
   });
 
-  if ("IntersectionObserver" in window) {
-    var observer = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        instruments.forEach(function (instrument) {
-          if (instrument.row === entry.target) {
-            instrument.active = entry.isIntersecting && entry.intersectionRatio > 0;
-          }
-        });
-      });
-    }, { rootMargin: "120px 0px" });
-    instruments.forEach(function (instrument) { observer.observe(instrument.row); });
-  }
-
-  var timer = null;
-  function frame() {
-    instruments.forEach(function (instrument) {
-      if (instrument.active) instrument.step();
-    });
-  }
-  function start() {
-    if (!timer && !document.hidden) timer = setInterval(frame, 90);
-  }
-  function stop() {
-    if (timer) clearInterval(timer);
-    timer = null;
-  }
-
-  start();
-  document.addEventListener("visibilitychange", function () {
-    if (document.hidden) stop();
-    else start();
+  instruments.forEach(function (instrument) {
+    portfolioMotion.add(instrument.step, 90, instrument.row);
   });
+
 })();
 
 /* Sticky section navigation: scroll position is the source of truth. */
@@ -807,7 +813,7 @@
   var checkTray = true;
 
   function centerIfHidden(item) {
-    if (!mobile || !mobile.matches || tray.scrollWidth <= tray.clientWidth) return;
+    if (!mobile || !mobile.matches || tray.scrollWidth <= tray.clientWidth || !tray.clientWidth) return;
 
     var trayBox = tray.getBoundingClientRect();
     var linkBox = item.link.getBoundingClientRect();

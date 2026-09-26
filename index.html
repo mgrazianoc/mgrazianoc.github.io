@@ -8,14 +8,17 @@
 <meta name="theme-color" content="#0b0c0e">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;450;500;560&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=10">
+<link rel="stylesheet" href="styles.css?v=11">
+<script src="site.js?v=11" defer></script>
 </head>
 <body>
+<a class="skip-link" href="#top">Skip to content</a>
 
 <nav class="nav" aria-label="Sections">
   <div class="nav-in">
     <a class="nav-me" href="#top">Marco Graziano</a>
-    <ul class="nav-links">
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="section-links" hidden>Menu <span aria-hidden="true">+</span></button>
+    <ul class="nav-links" id="section-links">
       <li><a href="#symptoms">Symptoms</a></li>
       <li><a href="#measure">Measure</a></li>
       <li><a href="#engagements">Engagements</a></li>
@@ -27,21 +30,24 @@
   </div>
 </nav>
 
-<div class="page" id="top">
+<main class="page" id="top" tabindex="-1">
 
-  <aside class="card">
+  <header class="card">
     <img src="assets/marco-graziano.jpg" alt="Marco Graziano" width="320" height="400">
     <div>
       <h1>Marco Graziano</h1>
       <p class="role">performance engineer</p>
       <dl>
+        <dt class="sr-only">Location</dt>
         <dd>São Paulo, BR · UTC−3</dd>
+        <dt class="sr-only">Email</dt>
         <dd><a href="mailto:mgrazianodecastro@gmail.com">mgrazianodecastro@gmail.com</a></dd>
+        <dt class="sr-only">Profiles</dt>
         <dd><a href="https://github.com/mgrazianoc">github</a> · <a href="https://www.linkedin.com/in/magcastro/">linkedin</a></dd>
       </dl>
       <p class="status">Available · fixed-scope engagements</p>
     </div>
-  </aside>
+  </header>
 
   <section class="intro">
     <p class="lede">The hot path is the product.<br><b>The rest waits on it.</b></p>
@@ -55,12 +61,13 @@
     </ul>
   </section>
 
-  <div class="headins">
+  <figure class="headins">
     <div class="comp">
-      <div class="fig"><span>latency under load</span><span>Fig. 01</span></div>
+      <div class="fig"><span>latency under load</span><span>Fig. 01</span><button class="motion-toggle" type="button" aria-pressed="false" hidden>Pause animations</button></div>
       <div class="body"><svg id="pct" viewBox="0 0 900 300" preserveAspectRatio="none" aria-hidden="true"><g id="pgrid"></g><g id="plines"></g><g id="plabels"></g></svg></div>
     </div>
-  </div>
+    <figcaption class="chart-summary">Modeled latency under load: the mean stays steady while the slowest requests take much longer to recover.</figcaption>
+  </figure>
 
   <section class="sec" id="symptoms">
     <h2>Common symptoms</h2>
@@ -109,13 +116,14 @@
     <p class="def">CPU time is only the part that was running. I also measure where work waited, who woke it, what stayed allocated, and where the pages landed.</p>
   </section>
   <div class="c-full">
+    <p class="chart-scroll-hint">Scroll each figure horizontally to see the detail.</p>
     <div class="measure-bench">
       <article class="measure-row" data-measure="running">
         <header class="measure-label">
           <span class="measure-no">01</span>
           <div><p class="measure-mode">on CPU</p><h3>Running</h3></div>
         </header>
-        <div class="measure-visual">
+        <div class="measure-visual" tabindex="0" role="group" aria-label="Running diagram, scroll horizontally">
           <svg viewBox="0 0 620 92" role="img" aria-label="Temporal CPU heat field linked to an on-CPU flame graph">
             <rect width="620" height="92" fill="#090b0e"/>
             <g class="measure-grid" stroke="#1b2026" stroke-width="1">
@@ -173,7 +181,7 @@
           <span class="measure-no">02</span>
           <div><p class="measure-mode">off CPU</p><h3>Waiting</h3></div>
         </header>
-        <div class="measure-visual">
+        <div class="measure-visual" tabindex="0" role="group" aria-label="Waiting diagram, scroll horizontally">
           <svg viewBox="0 0 620 92" role="img" aria-label="Off-CPU flame graph weighted by blocked time">
             <rect width="620" height="92" fill="#090b0e"/>
             <g class="measure-grid" stroke="#1b2026" stroke-width="1">
@@ -212,7 +220,7 @@
           <span class="measure-no">03</span>
           <div><p class="measure-mode">handoffs</p><h3>Waking</h3></div>
         </header>
-        <div class="measure-visual">
+        <div class="measure-visual" tabindex="0" role="group" aria-label="Waking diagram, scroll horizontally">
           <svg viewBox="0 0 620 92" role="img" aria-label="Sparse waker by target matrix weighted by blocked time">
             <rect width="620" height="92" fill="#090b0e"/>
             <g class="measure-svg-labels" fill="#696f76">
@@ -251,7 +259,7 @@
           <span class="measure-no">04</span>
           <div><p class="measure-mode">lifetimes</p><h3>Retained</h3></div>
         </header>
-        <div class="measure-visual">
+        <div class="measure-visual" tabindex="0" role="group" aria-label="Retained diagram, scroll horizontally">
           <svg viewBox="0 0 620 92" role="img" aria-label="Allocation cohort tracks showing short and retained lifetimes">
             <rect width="620" height="92" fill="#090b0e"/>
             <g class="measure-grid" stroke="#1b2026" stroke-width="1">
@@ -294,7 +302,7 @@
           <span class="measure-no">05</span>
           <div><p class="measure-mode">address space</p><h3>Mapped</h3></div>
         </header>
-        <div class="measure-visual">
+        <div class="measure-visual" tabindex="0" role="group" aria-label="Mapped diagram, scroll horizontally">
           <svg viewBox="0 0 620 92" role="img" aria-label="Address-space mappings with page residency and fault activity">
             <rect width="620" height="92" fill="#090b0e"/>
             <g shape-rendering="crispEdges">
@@ -554,10 +562,10 @@
       <br><a href="https://github.com/mgrazianoc">github</a><a href="https://www.linkedin.com/in/magcastro/">linkedin</a></p>
   </section>
 
-  <div class="tail"><span>Marco Graziano</span><span class="bits">0111000110000100111011101000</span><span>Independent performance engineer</span></div>
+</main>
 
-</div>
+<footer class="tail site-footer"><span>Marco Graziano</span><span class="bits" aria-hidden="true">0111000110000100111011101000</span><span>Independent performance engineer</span></footer>
 
-<script src="viz.js?v=10"></script>
+<script src="viz.js?v=11"></script>
 </body>
 </html>

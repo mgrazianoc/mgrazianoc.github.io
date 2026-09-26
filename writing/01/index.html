@@ -8,14 +8,17 @@
 <meta name="theme-color" content="#0b0c0e">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;450;500;560&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../styles.css?v=10">
+<link rel="stylesheet" href="../../styles.css?v=11">
+<script src="../../site.js?v=11" defer></script>
 </head>
 <body>
+<a class="skip-link" href="#main-content">Skip to content</a>
 
 <nav class="nav" aria-label="Sections">
   <div class="nav-in">
     <a class="nav-me" href="../../">Marco Graziano</a>
-    <ul class="nav-links">
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="section-links" hidden>Menu <span aria-hidden="true">+</span></button>
+    <ul class="nav-links" id="section-links">
       <li><a href="../../#symptoms">Symptoms</a></li>
       <li><a href="../../#measure">Measure</a></li>
       <li><a href="../../#engagements">Engagements</a></li>
@@ -27,7 +30,7 @@
   </div>
 </nav>
 
-<div class="page page-note">
+<main class="page page-note" id="main-content" tabindex="-1">
 
   <article class="note">
     <a class="note-back" href="../">All notes</a>
@@ -40,16 +43,16 @@
     <div class="note-body">
       <p>Faster is awesome, and most companies will never have to worry about improving performance beyond hundreds of milliseconds. For the cases that do care, it usually boils down to two scenarios:</p>
       <ul>
-        <li>the company is trying to <button type="button" class="term" aria-label="penetrate a market" aria-describedby="tip-pen">penetrate a market<span class="term-tip" id="tip-pen" role="tooltip" popover="manual">Get customers in a market that already has sellers. You take share from whoever is already there.</span></button> by offering a competitive product, or service, whose main difference is its performance; or</li>
+        <li>the company is trying to <button type="button" class="term" aria-label="penetrate a market" aria-describedby="tip-pen">penetrate a market<span class="term-tip" id="tip-pen" role="tooltip">Get customers in a market that already has sellers. You take share from whoever is already there.</span></button> by offering a competitive product, or service, whose main difference is its performance; or</li>
         <li>the company is on a train that will not stop, and it will crash into huge bills, poor user experience, or even worse: software that never runs.</li>
       </ul>
       <p>Take, for example, some companies that in the past had to deal with performance in order for their product to remain competitive in the market.</p>
       <p><b class="note-who">Google</b>: their search engine not only had to carry good features for retrieving good results, but it also had to be fast. If their page spent too much time "thinking", well, there was a good chance the user would just give up. The index could be perfect; if the path was slow, then it was not a search. That is their product.</p>
-      <p><b class="note-who">Apple</b>: when <button type="button" class="term" aria-label="John Doerr" aria-describedby="tip-doerr">John Doerr<span class="term-tip" id="tip-doerr" role="tooltip" popover="manual">A Kleiner Perkins partner. Early money in Google, Amazon, Netscape.</span></button> saw the product for the first time, Steve Jobs said "this device nearly broke the company". What was so good about it? Smoothness. Nothing back in the day ever felt like that. The tactile response time behaved like the physical world, at least compared to human perception. It was not the first "smartphone", but it was the first one that ever felt good enough.</p>
-      <p><b class="note-who">Nasdaq</b>: a big B2B failure case. On May 18, 2012, Facebook's IPO day, before any trading could even start, the exchange had to make sure they correctly computed the opening price from every single order. If someone canceled while they were computing, they had to compute everything again. At first, this looked like a simple sum / subtraction problem. They had tested it with 40,000 orders. But that day, they got almost 500,000. People just kept canceling, and the system kept starting over. As a consequence, trading opened half an hour late, and market makers spent hours not knowing which of their trades had gone through. The brokers claimed almost <a class="note-cite" href="https://www.investmentnews.com/nasdaq-to-pay-10-million-to-settle-sec-facebook-case-51723" target="_blank" rel="noopener noreferrer">$500 million in losses</a>...</p>
+      <p><b class="note-who">Apple</b>: when <button type="button" class="term" aria-label="John Doerr" aria-describedby="tip-doerr">John Doerr<span class="term-tip" id="tip-doerr" role="tooltip">A Kleiner Perkins partner. Early money in Google, Amazon, Netscape.</span></button> saw the product for the first time, Steve Jobs said "this device nearly broke the company". What was so good about it? Smoothness. Nothing back in the day ever felt like that. The tactile response time behaved like the physical world, at least compared to human perception. It was not the first "smartphone", but it was the first one that ever felt good enough.</p>
+      <p><b class="note-who">Nasdaq</b>: a big B2B failure case. On May 18, 2012, Facebook's IPO day, before any trading could even start, the exchange had to make sure they correctly computed the opening price from every single order. If someone canceled while they were computing, they had to compute everything again. At first, this looked like a simple sum / subtraction problem. They had tested it with 40,000 orders. But that day, they got almost 500,000. People just kept canceling, and the system kept starting over. As a consequence, trading opened half an hour late, and market makers spent hours not knowing which of their trades had gone through. The brokers claimed almost <a class="note-cite" href="https://www.investmentnews.com/nasdaq-to-pay-10-million-to-settle-sec-facebook-case-51723" >$500 million in losses</a>...</p>
       <div class="art">
         <p class="bar"><span>ipo_cross.rs</span><span>artifact</span></p>
-        <pre><span class="cm">// Nasdaq's IPO cross, more or less.</span>
+        <pre tabindex="0" role="group" aria-label="Rust code example, scroll horizontally"><code><span class="cm">// Nasdaq's IPO cross, more or less.</span>
 <span class="cm">// Tested with 40_000 orders. Works on my machine.</span>
 <span class="kw">loop</span> {
     <span class="kw">let</span> cross = <span class="fn">compute_opening_cross</span>(<span class="op">&amp;</span>book);
@@ -57,13 +60,13 @@
         <span class="kw">break</span>; <span class="cm">// surely people stop canceling at some point</span>
     }
 }
-<span class="fn">open_trading</span>();</pre>
+<span class="fn">open_trading</span>();</code></pre>
       </div>
       <h2>At first...</h2>
       <p>Everything feels straightforward to tackle. Improving a SQL query, some network logic, algorithm optimizations, the everyday bread and butter. "Everything will be ready within the scheduled deadline." After a few tries and some handmade benchmarks, the harsh reality of software engineering shatters right in our face. We've tried everything we knew right off the top of our heads. Everything a solid senior engineer has learned throughout their career. All the best practices. All the experience. EVERYTHING. Yet... the system is not even 10% there.</p>
-      <p>And that's just for what was measured. In scenarios where the mean is not the only number that matters (it never is), <button type="button" class="term" aria-label="p99+" aria-describedby="tip-p99">p99+<span class="term-tip" id="tip-p99" role="tooltip" popover="manual">The slow one percent, and worse. The mean can look fine the entire time these are happening.</span></button> quantiles are poorly understood monsters. Their radical behavior?</p>
+      <p>And that's just for what was measured. In scenarios where the mean is not the only number that matters (it never is), <button type="button" class="term" aria-label="p99+" aria-describedby="tip-p99">p99+<span class="term-tip" id="tip-p99" role="tooltip">The slow one percent, and worse. The mean can look fine the entire time these are happening.</span></button> quantiles are poorly understood monsters. Their radical behavior?</p>
       <blockquote>Ohh, that's OS jitter...</blockquote>
-      <p>Yes, <button type="button" class="term" aria-label="OS jitter" aria-describedby="tip-os-2">OS jitter<span class="term-tip" id="tip-os-2" role="tooltip" popover="manual">The kernel stopping your process for a bit: a timer, a schedule, another thread. The clock moved. Your function did not.</span></button>. Let's just ignore the bizarre <button type="button" class="term" aria-label="multimodal" aria-describedby="tip-multi">multimodal<span class="term-tip" id="tip-multi" role="tooltip" popover="manual">The latency is not one population. Any number of blobs, each a different path.</span></button> distribution the system has... which cannot even hold stable over time.</p>
+      <p>Yes, <button type="button" class="term" aria-label="OS jitter" aria-describedby="tip-os-2">OS jitter<span class="term-tip" id="tip-os-2" role="tooltip">The kernel stopping your process for a bit: a timer, a schedule, another thread. The clock moved. Your function did not.</span></button>. Let's just ignore the bizarre <button type="button" class="term" aria-label="multimodal" aria-describedby="tip-multi">multimodal<span class="term-tip" id="tip-multi" role="tooltip">The latency is not one population. Any number of blobs, each a different path.</span></button> distribution the system has... which cannot even hold stable over time.</p>
       <p>At this point, for those companies, performance engineering starts becoming a real term. Coding suddenly switches from making code recognizable by humans, and easy to digest, to something the machine doesn't have to juggle just to move variables around. Those tiny but furious lines of code scare you at first, but it soon clicks. Full-batch end-to-end software that runs in microseconds is extremely hard to build.</p>
       <figure class="note-banner">
         <img src="optimizing.webp" width="1024" height="434" alt="A pixel progress window. Optimizing. Time remaining: 2 sprints." decoding="async">
@@ -90,10 +93,10 @@
       <br><a href="https://github.com/mgrazianoc">github</a><a href="https://www.linkedin.com/in/magcastro/">linkedin</a></p>
   </section>
 
-  <div class="tail"><span>Marco Graziano</span><span class="bits">0111000110000100111011101000</span><span>Independent performance engineer</span></div>
+</main>
 
-</div>
+<footer class="tail site-footer"><span>Marco Graziano</span><span class="bits" aria-hidden="true">0111000110000100111011101000</span><span>Independent performance engineer</span></footer>
 
-<script src="../note.js?v=10"></script>
+<script src="../note.js?v=11"></script>
 </body>
 </html>

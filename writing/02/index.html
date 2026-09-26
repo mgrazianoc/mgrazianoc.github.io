@@ -8,14 +8,17 @@
 <meta name="theme-color" content="#0b0c0e">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;450;500;560&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../styles.css?v=10">
+<link rel="stylesheet" href="../../styles.css?v=11">
+<script src="../../site.js?v=11" defer></script>
 </head>
 <body>
+<a class="skip-link" href="#main-content">Skip to content</a>
 
 <nav class="nav" aria-label="Sections">
   <div class="nav-in">
     <a class="nav-me" href="../../">Marco Graziano</a>
-    <ul class="nav-links">
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="section-links" hidden>Menu <span aria-hidden="true">+</span></button>
+    <ul class="nav-links" id="section-links">
       <li><a href="../../#symptoms">Symptoms</a></li>
       <li><a href="../../#measure">Measure</a></li>
       <li><a href="../../#engagements">Engagements</a></li>
@@ -27,7 +30,7 @@
   </div>
 </nav>
 
-<div class="page page-note">
+<main class="page page-note" id="main-content" tabindex="-1">
 
   <article class="note">
     <a class="note-back" href="../">All notes</a>
@@ -54,7 +57,7 @@
       <p>One thing that comes from being in a long-term relationship with these numbers is that almost all software written out there carries opinions which are not the best fit for the context it ended up in. Best practices are better known for making software a commodity: you saw this pattern once, you have read similar code many times, and even though this is not your code, you immediately understand it. The problem? Nothing in life comes free. It's an exchange between readability, maintainability and ergonomics against the system's performance. And the worst kind of tradeoff: the silent kind.</p>
 
       <h2>A bill, with a name on it</h2>
-      <p>In 2020, Discord <a class="note-cite" href="https://discord.com/blog/why-discord-is-switching-from-go-to-rust" target="_blank" rel="noopener noreferrer">told the story</a> of a service called Read States. Its job was simple: to keep track of which channels and messages users have read. Because of how the app works, the service was hit every time a user connects, every time a message is sent, and every time a message is read. Truly a marvelous hot path, as hot as they get.</p>
+      <p>In 2020, Discord <a class="note-cite" href="https://discord.com/blog/why-discord-is-switching-from-go-to-rust" >told the story</a> of a service called Read States. Its job was simple: to keep track of which channels and messages users have read. Because of how the app works, the service was hit every time a user connects, every time a message is sent, and every time a message is read. Truly a marvelous hot path, as hot as they get.</p>
       <p>It was written in Go, and for most of its job, it was more than good enough. Most of the time, at least. It had a peculiar problem: every couple of minutes, latency just decided to spike. More regular than an atomic clock, it was always there. In such a hot environment, everything pointed at some memory management hitting hard.</p>
       <p>After investigation, the team concluded the culprit for the spikes was none other than the Garbage Collector itself. The service barely produced any garbage, but that was not the point. Even in such a highly optimized system, the GC still had to walk the entire LRU cache, every cycle, just to prove that memory was still referenced. And the clock-like schedule? Go forces a collection at least once every two minutes, garbage or not. Since data lived in memory most of the time, they experimented by making the cache smaller, and the spikes got smaller too. But the tradeoff: the 99th percentile got worse, since the system was now missing the hot data, triggering a new trip to the database.</p>
       <p>Trading one number for another, and getting nowhere.</p>
@@ -68,11 +71,11 @@
 
       <div class="art">
         <p class="bar"><span>event_v1.rs</span><span>artifact</span></p>
-        <pre><span class="kw">struct</span> Event {
+        <pre tabindex="0" role="group" aria-label="Rust code example, scroll horizontally"><code><span class="kw">struct</span> Event {
     topic: String,          <span class="cm">// heap</span>
     payload: Vec<span class="op">&lt;</span>u8<span class="op">&gt;</span>,       <span class="cm">// heap</span>
     received_at: Instant,
-}</pre>
+}</code></pre>
       </div>
 
       <p>Can you imagine that, just by placing this structure within our system, we are already under-performing by a real margin? Not the sort of thing that "saves memory" or "speeds up by 10ms at scale". No. We are talking about the sort of performance costs, derived from a human perspective on how software should look, that quietly eat a big slice of your per-event budget, and turn crossing the margin <b>of a million events per second, per core</b>, into a fight. Just by that simple structure.</p>
@@ -81,7 +84,7 @@
       <p>First, for that structure to even exist, the program must ask the allocator for a couple of allocations: one for <code>topic</code>, and another one for <code>payload</code>, both on the heap. The rest lives inline, wherever the struct itself happens to be. When the <code>consumer</code> thread receives that structure, it now owns it, heap data included, becoming responsible for freeing memory in a thread that didn't allocate it in the first place. This is the textbook scenario allocators like the least: they can handle it, but it's never free.</p>
 
       <p>On a typical x86-64 Linux build (the compiler is free to reorder the fields), the memory layout looks like this:</p>
-      <pre class="note-fig"> off  Event (64 bytes, align 8)
+      <figure class="memory-figure"><figcaption>Event memory layout: a 64-byte struct with alignment padding between fields.</figcaption><pre class="note-fig" tabindex="0" role="group" aria-label="Memory diagram, scroll horizontally"><span aria-hidden="true"> off  Event (64 bytes, align 8)
       +-------------------------+
    0  | topic.ptr         8 B   |---->  [ heap: topic bytes ]
    8  | topic.cap         8 B   |
@@ -95,22 +98,22 @@
   56  | received_at.nanos 4 B   |
   60  | (padding)         4 B   |
       +-------------------------+
-  64</pre>
+  64</span></pre></figure>
 
       <p>If we assume that a small allocation on the heap costs about 10-50ns, the two allocations land around 20-100ns per event, and freeing them costs about the same again. At a million events per second on a single core, the whole budget is 1µs per event. That's up to a fifth of it spent doing basically nothing, just... managing memory!</p>
       <p>Another problem is alignment, though not the kind the compiler worries about. Rust makes sure every field of <code>Event</code> is properly aligned, so reading a field is always cheap and predictable. But the CPU doesn't think in fields, it thinks in 64-byte cache lines. Our struct is exactly 64 bytes, yet it's only guaranteed to start on an 8-byte boundary. Put a few of them in a buffer, and unless you're lucky about where that buffer begins, every single event straddles two cache lines.</p>
-      <pre class="note-fig"> cache line   +---------------+---------------+---------------+
+      <figure class="memory-figure"><figcaption>Cache lines: an unaligned 64-byte event spans two adjacent cache lines.</figcaption><pre class="note-fig" tabindex="0" role="group" aria-label="Memory diagram, scroll horizontally"><span aria-hidden="true"> cache line   +---------------+---------------+---------------+
               |    line 0     |    line 1     |    line 2     |
               +---------------+---------------+---------------+
  events           +---------------+---------------+---------------+
                   |     ev[0]     |     ev[1]     |     ev[2]     |
                   +---------------+---------------+---------------+
 
-    buffer starts 16 B into a line: every event touches two lines</pre>
+    buffer starts 16 B into a line: every event touches two lines</span></pre></figure>
 
       <p>Worse, when the <code>producer</code> writes one slot while the <code>consumer</code> reads the one next to it, both cores fight over the same line, invalidating each other's cache on every write. It's called false sharing, and it's the kind of cost you'll never see in the code. It doesn't look like much, again, but every move between CPU and memory compounds over time.</p>
       <p>And that's before following the pointers. The data we actually care about isn't even in the struct:</p>
-      <pre class="note-fig">    Event (somewhere)          heap
+      <figure class="memory-figure"><figcaption>Heap indirection: the event points to a topic string and a separately allocated payload.</figcaption><pre class="note-fig" tabindex="0" role="group" aria-label="Memory diagram, scroll horizontally"><span aria-hidden="true">    Event (somewhere)          heap
     +--------------+           +-----------------+
     | topic     ---+----------&gt;| "sensors/temp"  |
     | payload   ---+-------+   +-----------------+
@@ -118,13 +121,13 @@
     +--------------+       +--&gt;| 4a 1f 00 ...    |
                                +-----------------+
 
-    three places in memory, for one event</pre>
+    three places in memory, for one event</span></pre></figure>
 
       <p>From here, it depends on one thing: how big is the payload? Case one: it's small. Sensor readings, price ticks, heartbeats. Hurray! If it fits, it sits: the whole event can fit in a single cache line. No heap, no pointers, nothing to chase.</p>
 
       <div class="art">
         <p class="bar"><span>event_v2.rs</span><span>artifact</span></p>
-        <pre><span class="op">#[</span>repr(C, align(64))<span class="op">]</span>
+        <pre tabindex="0" role="group" aria-label="Rust code example, scroll horizontally"><code><span class="op">#[</span>repr(C, align(64))<span class="op">]</span>
 <span class="kw">struct</span> Event {
     received_at: u64,       <span class="cm">//  8  nanos since start</span>
     topic: u16,             <span class="cm">//  2  interned at startup</span>
@@ -132,32 +135,32 @@
     payload: [u8; 52],      <span class="cm">// 52  inline</span>
 }
 
-<span class="kw">const</span> _: () = <span class="fn">assert</span>!(<span class="fn">size_of</span>::<span class="op">&lt;</span>Event<span class="op">&gt;</span>() == 64);</pre>
+<span class="kw">const</span> _: () = <span class="fn">assert</span>!(<span class="fn">size_of</span>::<span class="op">&lt;</span>Event<span class="op">&gt;</span>() == 64);</code></pre>
       </div>
 
       <p>Three things changed. First, the topic became a <code>u16</code>. Every topic we know about is stored once, in a table we build at startup, and the event just carries its index. That's called interning, and it turns comparing topics into a two-byte compare instead of walking a string. The catch is that the topics have to be known upfront, or the table has to grow at runtime.</p>
-      <pre class="note-fig"> topic table (built once at startup)
+      <figure class="memory-figure"><figcaption>Topic lookup: numeric topic identifiers refer to strings in a table built once at startup.</figcaption><pre class="note-fig" tabindex="0" role="group" aria-label="Memory diagram, scroll horizontally"><span aria-hidden="true"> topic table (built once at startup)
  +---+------------------+
  | 0 | "orders/created" |
  | 1 | "orders/paid"    |
  | 2 | "sensors/humid"  |
  | 3 | "sensors/temp"   |  &lt;--  event.topic = 3
- +---+------------------+</pre>
+ +---+------------------+</span></pre></figure>
       <p>Second, the <code>Instant</code> became plain nanoseconds since the service started. Third, the payload moved inside the struct, as a fixed 52-byte array. And <code>repr(C, align(64))</code> pins it all down: the bytes sit in the order I wrote them, not in the order the compiler felt like, and every event owns exactly one cache line, with no straddling and no false sharing between neighbors.</p>
-      <pre class="note-fig"> 0          8       10      12                                      64
+      <figure class="memory-figure"><figcaption>Inline event: timestamp, topic, length, and a 52-byte payload fit in one 64-byte cache line.</figcaption><pre class="note-fig" tabindex="0" role="group" aria-label="Memory diagram, scroll horizontally"><span aria-hidden="true"> 0          8       10      12                                      64
  +----------+-------+-------+---------------------------------------+
  | recv_at  | topic |  len  |  payload (52 B, inline)               |
  +----------+-------+-------+---------------------------------------+
  |&lt;-------------------- one cache line (64 B) ---------------------&gt;|
 
- one place in memory. one cache line.</pre>
+ one place in memory. one cache line.</span></pre></figure>
 
       <p>Zero allocations. Zero pointers to follow. One event, one cache line. The price is right there in the type: 52 bytes of payload and not one byte more. A 4-byte event still burns the whole 64, and you traded that memory for the allocator, on purpose.</p>
       <p>Case two: the payload is big. Not hurray. A 1 KB payload will never fit in a cache line, and dragging it along every time we route or filter an event would undo everything we just won. So the struct stops carrying the payload and starts describing it. The same move pays off even for small payloads, by the way, if most of the time you're routing and filtering and never actually reading the bytes.</p>
 
       <div class="art">
         <p class="bar"><span>event_v3.rs</span><span>artifact</span></p>
-        <pre><span class="op">#[</span>repr(C)<span class="op">]</span>
+        <pre tabindex="0" role="group" aria-label="Rust code example, scroll horizontally"><code><span class="op">#[</span>repr(C)<span class="op">]</span>
 <span class="kw">struct</span> Event {
     received_at: u64,
     topic: u16,
@@ -167,21 +170,21 @@
 
 <span class="kw">const</span> _: () = <span class="fn">assert</span>!(<span class="fn">size_of</span>::<span class="op">&lt;</span>Event<span class="op">&gt;</span>() == 16);
 
-<span class="kw">struct</span> MyCustomArena { <span class="cm">/* one big allocation, handed out by offset */</span> }</pre>
+<span class="kw">struct</span> MyCustomArena { <span class="cm">/* one big allocation, handed out by offset */</span> }</code></pre>
       </div>
 
       <p>So what's an arena? It's one big block of memory, allocated once at startup, that we manage ourselves. Instead of asking the allocator for room every time a payload arrives, we copy the bytes into the next free spot and move a cursor forward. That's the whole allocation: an addition. Nothing gets freed one by one either. Here, the arena works like a ring: the writer keeps moving forward, wraps back to the start when it hits the end, and reuses the space the reader has already moved past.</p>
-      <pre class="note-fig"> arena: one allocation, made once at startup
+      <figure class="memory-figure"><figcaption>Ring arena: the reader follows the writer through one preallocated block; the writer wraps at the end.</figcaption><pre class="note-fig" tabindex="0" role="group" aria-label="Memory diagram, scroll horizontally"><span aria-hidden="true"> arena: one allocation, made once at startup
  +---------+-------------+---------+---------------------+
  | bytes 0 | bytes 1     | bytes 2 |        free         |
  +---------+-------------+---------+---------------------+
  ^                                 ^
  reader                            writer
 
- the writer only moves forward. at the end, it wraps to the start.</pre>
+ the writer only moves forward. at the end, it wraps to the start.</span></pre></figure>
 
       <p>Back to the struct: same fields as v2. The payload turned into an offset plus the <code>len</code> that was already sitting there, and the bytes moved into the arena. When the reader hasn't caught up and there's no room left, the arena hands back nothing. That "nothing" is your drop policy. And <code>off</code> never resets: it keeps counting as the arena wraps around, and the real position is just <code>off</code> modulo the arena size. If the writer has already lapped an event's <code>off</code>, those bytes belong to someone else now, and the reader can tell with a single comparison, instead of silently reading garbage. That's the reason this thing doesn't corrupt data.</p>
-      <pre class="note-fig"> events: dense array, 16 B each
+      <figure class="memory-figure"><figcaption>Dense events: four 16-byte event descriptors fit per cache line and point to payloads in an arena.</figcaption><pre class="note-fig" tabindex="0" role="group" aria-label="Memory diagram, scroll horizontally"><span aria-hidden="true"> events: dense array, 16 B each
  +-----------+-----------+-----------+---
  | ev[0]     | ev[1]     | ev[2]     | ...
  | off, len  | off, len  | off, len  |
@@ -193,12 +196,12 @@
  +-----------+-----------+-----------+---
  arena: one allocation at startup, each payload written once
 
- one cache line: exactly 4 events</pre>
+ one cache line: exactly 4 events</span></pre></figure>
 
       <p>Sixteen bytes. Four events per cache line, none of them straddling. Routing by topic, sorting by timestamp, batching by length: all of that now runs over a dense array, and the payload isn't dragged along for the ride. You walk into the arena only when you actually need the bytes.</p>
       <p>And the two cases aren't a choice. Keep the bytes inline when they fit, point into the arena when they don't: Apache Arrow's <code>StringView</code> does exactly that, in 16 bytes.</p>
       <p>Zoom out, and this is the whole machine. The <code>producer</code> takes events in, writes the bytes into the arena, and pushes a 16-byte descriptor into a ring buffer. The <code>consumer</code> pops descriptors, and follows them into the arena only when it actually needs the bytes.</p>
-      <pre class="note-fig">   ingress                ring: 16 B descriptors                process
+      <figure class="memory-figure"><figcaption>Producer and consumer: a ring carries 16-byte descriptors while a separate shared arena holds the payload bytes.</figcaption><pre class="note-fig" tabindex="0" role="group" aria-label="Memory diagram, scroll horizontally"><span aria-hidden="true">   ingress                ring: 16 B descriptors                process
  +----------+    +-------+-------+-------+-------+-------+    +----------+
  | producer |---&gt;| ev[5] | ev[6] | ev[7] |       |       |---&gt;| consumer |
  +----------+    +-------+-------+-------+-------+-------+    +----------+
@@ -208,7 +211,7 @@
       +---------------&gt;|   arena: payload bytes      |&lt;------------+
         writes         +-----------------------------+      reads
 
- the ring says what to do next. the arena holds what to do it with.</pre>
+ the ring says what to do next. the arena holds what to do it with.</span></pre></figure>
 
       <p>Kind of crazy? It's how your network card already talks to the kernel: a ring of small descriptors pointing into preallocated buffers. Linux's AF_XDP exposes almost exactly this shape, and so does DPDK. We didn't invent anything, we just stopped hiding it behind a <code>String</code>.</p>
       <p>It has a limitation, though. A ring-shaped arena assumes events are consumed roughly in order. If the <code>consumer</code> holds on to some payloads much longer than others, the writer can't move past them, and new events start getting dropped behind them. When that's your workload, a pool of fixed-size buffers, handed out and returned in any order, fits better. That's the route DPDK takes.</p>
@@ -236,9 +239,9 @@
       <br><a href="https://github.com/mgrazianoc">github</a><a href="https://www.linkedin.com/in/magcastro/">linkedin</a></p>
   </section>
 
-  <div class="tail"><span>Marco Graziano</span><span class="bits">0111000110000100111011101000</span><span>Independent performance engineer</span></div>
+</main>
 
-</div>
+<footer class="tail site-footer"><span>Marco Graziano</span><span class="bits" aria-hidden="true">0111000110000100111011101000</span><span>Independent performance engineer</span></footer>
 
 </body>
 </html>

@@ -8,14 +8,17 @@
 <meta name="theme-color" content="#0b0c0e">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;450;500;560&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../styles.css?v=10">
+<link rel="stylesheet" href="../styles.css?v=11">
+<script src="../site.js?v=11" defer></script>
 </head>
 <body>
+<a class="skip-link" href="#main-content">Skip to content</a>
 
 <nav class="nav" aria-label="Sections">
   <div class="nav-in">
     <a class="nav-me" href="../">Marco Graziano</a>
-    <ul class="nav-links">
+    <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="section-links" hidden>Menu <span aria-hidden="true">+</span></button>
+    <ul class="nav-links" id="section-links">
       <li><a href="../#symptoms">Symptoms</a></li>
       <li><a href="../#measure">Measure</a></li>
       <li><a href="../#engagements">Engagements</a></li>
@@ -27,10 +30,10 @@
   </div>
 </nav>
 
-<div class="page page-writing">
+<main class="page page-writing" id="main-content" tabindex="-1">
 
   <section class="sec writing-head">
-    <h2>Writing <span class="sec-count">· 2 notes</span></h2>
+    <h1>Writing <span class="sec-count">· 2 notes</span></h1>
     <p class="def">General arguments from recurring systems work, not from any one system.</p>
   </section>
   <div class="c-full">
@@ -86,9 +89,9 @@
       <br><a href="https://github.com/mgrazianoc">github</a><a href="https://www.linkedin.com/in/magcastro/">linkedin</a></p>
   </section>
 
-  <div class="tail"><span>Marco Graziano</span><span class="bits">0111000110000100111011101000</span><span>Independent performance engineer</span></div>
+</main>
 
-</div>
+<footer class="tail site-footer"><span>Marco Graziano</span><span class="bits" aria-hidden="true">0111000110000100111011101000</span><span>Independent performance engineer</span></footer>
 
 </body>
 </html>

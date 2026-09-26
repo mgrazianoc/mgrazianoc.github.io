@@ -1,114 +1,92 @@
+/* Definitions work with touch, hover, and keyboard; Escape preserves focus. */
 (function () {
-  var terms = Array.prototype.slice.call(document.querySelectorAll(".term"));
+  var terms = [].slice.call(document.querySelectorAll('.term'));
   if (!terms.length) return;
+  var hover = window.matchMedia('(hover: hover) and (pointer: fine)');
+  var active = null;
+  var timer;
+  var pointerFocus = false;
 
-  var hover = window.matchMedia("(hover: hover) and (pointer: fine)");
-
-  function tipOf(term) {
-    var id = term.getAttribute("aria-describedby");
-    return id ? document.getElementById(id) : term.querySelector(".term-tip");
+  function tipOf(term) { return document.getElementById(term.getAttribute('aria-describedby')); }
+  function close() {
+    clearTimeout(timer);
+    if (!active) return;
+    tipOf(active).hidden = true;
+    tipOf(active).classList.remove('is-shown');
+    active.setAttribute('aria-expanded', 'false');
+    active = null;
   }
-
-  function hide(tip) {
-    if (!tip) return;
-    if (tip.hidePopover) {
-      try { if (tip.matches(":popover-open")) tip.hidePopover(); } catch (e) {}
-    }
-    tip.classList.remove("is-shown");
-    tip.removeAttribute("style");
-  }
-
-  function dock(term) {
-    var tip = tipOf(term);
-    if (!tip) return;
-    hide(tip);
-    if (tip.parentElement !== term) term.appendChild(tip);
-  }
-
-  function place(term) {
-    var tip = tipOf(term);
-    if (!tip) return;
-    var r = term.getBoundingClientRect();
-    tip.classList.add("is-shown");
-    tip.style.position = "fixed";
-    tip.style.margin = "0";
-    tip.style.inset = "auto";
-    tip.style.left = Math.max(16, r.left) + "px";
-    tip.style.right = "auto";
-    tip.style.bottom = Math.max(16, window.innerHeight - r.top + 10) + "px";
-    tip.style.top = "auto";
-    if (tip.showPopover) {
-      try { if (!tip.matches(":popover-open")) tip.showPopover(); } catch (e) {}
-    }
+  function place() {
+    if (!active) return;
+    var tip = tipOf(active);
+    var rect = active.getBoundingClientRect();
+    var viewport = window.visualViewport;
+    var left = viewport ? viewport.offsetLeft : 0;
+    var top = viewport ? viewport.offsetTop : 0;
+    var width = viewport ? viewport.width : window.innerWidth;
+    var height = viewport ? viewport.height : window.innerHeight;
+    var nav = document.querySelector('.nav');
+    var safeTop = Math.max(top + 12, nav.getBoundingClientRect().bottom + 12);
+    if (rect.bottom < safeTop || rect.top > top + height) { close(); return; }
+    tip.style.maxWidth = Math.max(100, width - 24) + 'px';
+    tip.style.maxHeight = Math.max(80, height - 24) + 'px';
     var box = tip.getBoundingClientRect();
-    if (box.right > window.innerWidth - 16) {
-      tip.style.left = "auto";
-      tip.style.right = "16px";
-    }
-    if (box.top < 64) {
-      tip.style.bottom = "auto";
-      tip.style.top = (r.bottom + 10) + "px";
-    }
+    tip.style.left = Math.max(left + 12, Math.min(rect.left, left + width - box.width - 12)) + 'px';
+    var y = rect.top - box.height - 10;
+    if (y < safeTop) y = rect.bottom + 10;
+    tip.style.top = Math.max(top + 12, Math.min(y, top + height - box.height - 12)) + 'px';
   }
-
-  function closeAll(except) {
-    terms.forEach(function (term) {
-      if (term === except) return;
-      term.classList.remove("is-open");
-      dock(term);
-    });
-  }
-
   function open(term) {
-    closeAll(term);
-    term.classList.add("is-open");
-    place(term);
+    clearTimeout(timer);
+    if (active !== term) close();
+    active = term;
+    var tip = tipOf(term);
+    tip.hidden = false;
+    tip.classList.add('is-shown');
+    term.setAttribute('aria-expanded', 'true');
+    place();
   }
-
+  function leave() {
+    clearTimeout(timer);
+    timer = setTimeout(function () {
+      if (active && document.activeElement !== active && !active.matches(':hover') && !tipOf(active).matches(':hover')) close();
+    }, 180);
+  }
   terms.forEach(function (term) {
-    term.addEventListener("mouseenter", function () {
-      if (!hover.matches) return;
-      open(term);
+    var tip = tipOf(term);
+    term.setAttribute('data-enhanced', '');
+    term.setAttribute('aria-expanded', 'false');
+    term.setAttribute('aria-controls', tip.id);
+    tip.removeAttribute('popover');
+    tip.hidden = true;
+    tip.style.position = 'fixed';
+    tip.style.inset = 'auto';
+    document.body.appendChild(tip);
+    term.addEventListener('pointerdown', function () { pointerFocus = true; });
+    term.addEventListener('focus', function () {
+      if (!pointerFocus) open(term);
+      pointerFocus = false;
     });
-    term.addEventListener("mouseleave", function () {
-      if (!hover.matches) return;
-      term.classList.remove("is-open");
-      dock(term);
+    term.addEventListener('blur', close);
+    term.addEventListener('click', function (event) {
+      pointerFocus = false;
+      if (active === term && (!hover.matches || event.detail === 0)) close();
+      else open(term);
     });
-    term.addEventListener("focus", function () { open(term); });
-    term.addEventListener("click", function (e) {
-      e.stopPropagation();
-      if (hover.matches) {
-        open(term);
-        return;
-      }
-      if (term.classList.contains("is-open")) {
-        term.classList.remove("is-open");
-        dock(term);
-      } else {
-        open(term);
-      }
-    });
+    term.addEventListener('mouseenter', function () { if (hover.matches) open(term); });
+    term.addEventListener('mouseleave', leave);
+    tip.addEventListener('mouseenter', function () { clearTimeout(timer); });
+    tip.addEventListener('mouseleave', leave);
   });
-
-  document.addEventListener("click", function (e) {
-    if (!e.target.closest(".term")) {
-      closeAll();
-      terms.forEach(dock);
-    }
+  document.addEventListener('pointercancel', function () { pointerFocus = false; });
+  document.addEventListener('click', function (event) {
+    if (active && !active.contains(event.target) && !tipOf(active).contains(event.target)) close();
   });
-
-  document.addEventListener("keydown", function (e) {
-    if (e.key !== "Escape") return;
-    closeAll();
-    terms.forEach(dock);
-    var active = document.activeElement;
-    if (active && active.classList.contains("term")) active.blur();
-  });
-
-  window.addEventListener("resize", function () {
-    terms.forEach(function (term) {
-      if (term.classList.contains("is-open")) place(term);
-    });
-  });
+  document.addEventListener('keydown', function (event) { if (event.key === 'Escape') close(); });
+  window.addEventListener('scroll', place, { passive: true });
+  window.addEventListener('resize', place);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', place);
+    window.visualViewport.addEventListener('scroll', place);
+  }
 })();
