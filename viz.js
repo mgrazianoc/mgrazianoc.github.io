@@ -55,10 +55,11 @@ var portfolioMotion = (function () {
   var gLab = document.getElementById("plabels");
   if (gGrid && gLine && gLab) {
     var chart = document.getElementById('pct');
-    var W = Math.max(240, chart.clientWidth), H = 300, PAD = 78, N = 420, PW = W - PAD;
+    var chartBox = chart.getBoundingClientRect();
+    var W = chartBox.width, H = chartBox.height, PAD = 78, N = 420, PW = W - PAD;
     chart.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
-    var PLOT_TOP = 20, PLOT_BOTTOM = 216;
-    var LOAD_TOP = 257, LOAD_BOTTOM = 289;
+    var PLOT_TOP = 20, PLOT_BOTTOM = H - 84;
+    var LOAD_TOP = H - 43, LOAD_BOTTOM = H - 11;
     var LO = Math.log10(0.5), HI = Math.log10(2000);
     var CYCLE = 720, BASE_LOAD = 0.24, PEAK_LOAD = 0.92;
     var SEED = 0x8ac3f17;
@@ -186,7 +187,7 @@ var portfolioMotion = (function () {
       return LOAD_BOTTOM - load * (LOAD_BOTTOM - LOAD_TOP);
     }
 
-    [1, 10, 100, 1000].forEach(function (ms) {
+    var gridLines = [1, 10, 100, 1000].map(function (ms) {
       var line = document.createElementNS(NS, "line");
       line.setAttribute("x1", 0);
       line.setAttribute("x2", PW);
@@ -195,13 +196,14 @@ var portfolioMotion = (function () {
       line.setAttribute("stroke", "#1c2228");
       line.setAttribute("stroke-width", 1);
       gGrid.appendChild(line);
+      return { element: line, value: ms };
     });
 
     var separator = document.createElementNS(NS, "line");
     separator.setAttribute("x1", 0);
     separator.setAttribute("x2", PW);
-    separator.setAttribute("y1", 244);
-    separator.setAttribute("y2", 244);
+    separator.setAttribute("y1", H - 56);
+    separator.setAttribute("y2", H - 56);
     separator.setAttribute("stroke", "#1c2228");
     separator.setAttribute("stroke-width", 1);
     gGrid.appendChild(separator);
@@ -217,7 +219,7 @@ var portfolioMotion = (function () {
 
     var loadLabel = document.createElementNS(NS, "text");
     loadLabel.setAttribute("x", 0);
-    loadLabel.setAttribute("y", 252);
+    loadLabel.setAttribute("y", H - 48);
     loadLabel.setAttribute("font-size", "12");
     loadLabel.setAttribute("font-family", "IBM Plex Mono,ui-monospace,Menlo,monospace");
     loadLabel.setAttribute("letter-spacing", ".1em");
@@ -302,10 +304,27 @@ var portfolioMotion = (function () {
     }
 
     function resizeChart() {
-      W = Math.max(240, chart.clientWidth);
+      // One SVG unit is one CSS pixel on both axes. Replot the data when the
+      // panel changes size instead of stretching its text and stroke widths.
+      var box = chart.getBoundingClientRect();
+      if (!box.width || !box.height) return;
+      W = box.width;
+      H = box.height;
       PW = W - PAD;
+      PLOT_BOTTOM = H - 84;
+      LOAD_TOP = H - 43;
+      LOAD_BOTTOM = H - 11;
       chart.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
       gGrid.querySelectorAll('line').forEach(function (line) { line.setAttribute('x2', PW); });
+      gridLines.forEach(function (grid) {
+        grid.element.setAttribute('y1', ly(grid.value));
+        grid.element.setAttribute('y2', ly(grid.value));
+      });
+      separator.setAttribute('y1', H - 56);
+      separator.setAttribute('y2', H - 56);
+      loadBase.setAttribute('y1', LOAD_BOTTOM);
+      loadBase.setAttribute('y2', LOAD_BOTTOM);
+      loadLabel.setAttribute('y', H - 48);
       SER.forEach(function (sr) { sr.tx.setAttribute('x', W - 4); });
       draw();
     }

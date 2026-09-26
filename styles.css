@@ -96,19 +96,6 @@ body::before {
   backdrop-filter: blur(14px);
 }
 
-/* Cover the iPhone status-bar inset, including the area above Safari's
-   sticky-header edge as its browser controls expand and collapse. */
-.nav::before {
-  content: "";
-  position: absolute;
-  top: calc(0px - var(--safe-top));
-  right: 0;
-  left: 0;
-  height: calc(2 * var(--safe-top));
-  background: var(--bg);
-  pointer-events: none;
-}
-
 .nav-in {
   width: 100%;
   max-width: 1180px;
@@ -433,6 +420,8 @@ body::before {
 }
 
 .headins .comp { height: auto; flex: 1; }
+/* Keep the SVG's intrinsic aspect ratio from resizing its own container. */
+.headins .comp .body { flex: none; height: 324px; }
 
 /* ——— Instrument panels ——— */
 .comp {
@@ -1226,7 +1215,8 @@ h3 {
 
   .intro { padding: calc(var(--u) * 4) 0; }
   .headins { margin: 0 0 calc(var(--u) * 2); }
-  .headins .comp { height: 280px; flex: none; width: 100%; }
+  .headins .comp { height: auto; flex: none; width: 100%; }
+  .headins .comp .body { height: 300px; }
   .takes-h { margin-top: calc(var(--u) * 4); }
   .comp { margin-bottom: calc(var(--u) * 3); }
   .notes { columns: 1; }
@@ -1683,7 +1673,16 @@ pre:focus-visible { outline-offset: -3px; }
 @media (max-width: 60rem) {
   html { scroll-padding-top: var(--nav-offset, 76px); }
   body { background-attachment: scroll; }
-  .nav { height: auto; position: static; }
+  body::before { display: none; }
+  /* Safari samples edge-pinned backgrounds for its browser-bar area.
+     A backdrop filter prevents it from choosing a solid extension color. */
+  .nav {
+    height: auto;
+    position: static;
+    background: var(--bg);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
   .nav[data-enhanced] { position: sticky; }
   .nav-in {
     display: grid;
@@ -1740,7 +1739,6 @@ pre:focus-visible { outline-offset: -3px; }
   .takes { columns: 1; }
   .takes-h { margin-top: 16px; }
   .sec { margin-top: 32px; padding-top: 40px; }
-  .headins .comp { height: 280px; }
   .comp .fig { padding: 12px; gap: 8px; }
   .motion-toggle { flex-basis: 100%; }
   .tail { flex-direction: column; gap: 8px; }

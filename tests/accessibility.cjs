@@ -98,6 +98,36 @@ async function shown(locator) { assert.equal(await locator.isVisible(), true); }
     const top = await page.locator('#measure').evaluate(el => el.getBoundingClientRect().top);
     assert.ok(top >= 56, 'Anchor heading clears the sticky navigation');
   });
+  await check('Latency chart keeps readable, undistorted labels through mobile resize', async () => {
+    await page.goto(origin);
+    for (const viewport of [
+      { width: 320, height: 740 },
+      { width: 390, height: 844 },
+      { width: 844, height: 390 },
+      { width: 1440, height: 900 },
+      { width: 390, height: 844 }
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.waitForFunction(() => {
+        const matrix = document.querySelector('#pct').getScreenCTM();
+        return Math.abs(matrix.a - 1) < 0.01 && Math.abs(matrix.d - 1) < 0.01;
+      });
+      const drawing = await page.locator('#pct').evaluate(svg => {
+        const box = svg.getBoundingClientRect();
+        return {
+          height: box.height,
+          labels: [...svg.querySelectorAll('text')].map(label => {
+            const bounds = label.getBoundingClientRect();
+            return { height: bounds.height, inside: bounds.left >= box.left && bounds.right <= box.right + 1 && bounds.top >= box.top && bounds.bottom <= box.bottom + 1 };
+          })
+        };
+      });
+      assert.equal(drawing.labels.length, 5, 'All percentile and offered-load labels remain present');
+      assert.ok(drawing.labels.every(label => label.height >= 10 && label.inside), JSON.stringify(drawing));
+      assert.ok(drawing.height >= 250 && drawing.height <= 320, 'Plot height stays stable as controls wrap and orientation changes');
+      await noOverflow(page);
+    }
+  });
   await check('Keyboard focus remains visible throughout the home page', async () => {
     await page.goto(origin);
     for (let i = 0; i < 24; i++) {

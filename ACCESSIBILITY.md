@@ -11,7 +11,7 @@ The implementation targets [WCAG 2.2 AA](https://www.w3.org/TR/WCAG22/), with 44
 | Small body text, dim metadata, and low-contrast code comments were difficult to read. | Larger mobile prose and labels, brighter secondary text, underlined contact links, and relative font units for browser text enlargement. |
 | No page had a main landmark or skip link; the writing index lacked an H1; the profile definition list lacked terms. | Main/footer landmarks, skip links, an H1 on every page, and named profile details. Decorative binary text stays out of the accessibility tree. |
 | Keyboard outlines were thin, and article code/ASCII diagrams could not be scrolled with the keyboard. | Strong focus outlines, named focusable scroll containers, and readable text captions explaining the memory diagrams. |
-| Instrument labels shrank to a few pixels on phones. | Responsive hero plot labels; detailed instrument figures scroll within their own containers, with an explicit hint and keyboard access. Surrounding prose reflows normally. |
+| Instrument labels shrank to a few pixels on phones. The first mobile pass still compressed the latency plot vertically when its controls wrapped. | The latency plot has its own drawing height and uses one SVG unit per CSS pixel on both axes; resize updates the plot coordinates. Detailed instrument figures scroll within their own containers, with an explicit hint and keyboard access. Surrounding prose reflows normally. |
 | Touch definitions opened on focus and closed on the same tap; Escape blurred the trigger; tooltips could not be hovered. | First-tap opening, second/outside-tap dismissal, hoverable tooltip content, keyboard activation, Escape without lost focus, blur cleanup, and viewport-aware placement. |
 | Animations ran indefinitely without a pause control; reduced motion was checked only at load; some timers ran offscreen. | One persistent pause setting, live OS reduced-motion support, and suspended timers for hidden tabs/offscreen figures. The availability dot is static. |
 | Fixed sizes and nowrap text broke enlarged text and custom spacing. | Wrapping desktop navigation, relative font sizes, flexible labels, and long-word reflow. Short landscape viewports use non-sticky navigation. |
@@ -19,7 +19,7 @@ The implementation targets [WCAG 2.2 AA](https://www.w3.org/TR/WCAG22/), with 44
 
 ## Results
 
-36 checks passed in Chromium and 36 in WebKit. Axe reported no violations in the tested views. Local assets, links, fragment targets, unique IDs, JavaScript syntax, and diff whitespace checks also passed.
+37 checks passed in Chromium and 37 in WebKit. Axe reported no violations in the tested views. A chart regression check now verifies actual rendered scale, label size, clipping, and plot height through portrait/landscape/desktop resizing. The earlier 36-check suite did not detect the squashed chart and did not prove that iPhone Safari's browser-bar area was covered.
 
 ## Reproduce the checks
 
@@ -39,3 +39,5 @@ Coverage includes all four pages at 320, 390, 768, 1024, and 1440 CSS pixels; ax
 ## Verification limits
 
 Automated checks and browser inspection are not a conformance certification. VoiceOver/TalkBack speech output, physical iOS/Android devices, user font replacements, and Windows High Contrast should still receive hands-on acceptance testing. SVG illustrations have text alternatives; automated contrast tools do not fully judge every part of a visualization.
+
+The user reported that content still appeared above the mobile navbar after the safe-area overlay change. That overlay has been removed. Mobile navigation now uses an opaque background without a backdrop filter, and the fixed grain overlay is disabled on mobile. This follows [WebKit's edge-color sampling logic](https://github.com/WebKit/WebKit/blob/main/Source/WebCore/page/LocalFrameView.cpp), which handles filtered headers differently from solid-color headers. This is a proposed correction; it has not been verified in physical iPhone Safari. Headless WebKit and simulated CSS safe-area insets do not render Safari's browser chrome. Acceptance requires scrolling both ways as the browser controls expand/collapse on the affected iPhone.
