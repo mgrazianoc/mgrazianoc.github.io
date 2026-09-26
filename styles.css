@@ -1709,7 +1709,7 @@ pre:focus-visible { outline-offset: -3px; }
   .nav[data-enhanced]:not([data-menu-open]) :is(.nav-links, .nav-cta) { display: none; }
   .nav a:focus-visible, .nav-toggle:focus-visible { outline-offset: -3px; }
   .page { padding-inline: max(20px, env(safe-area-inset-left)) max(20px, env(safe-area-inset-right)); }
-  .card { grid-template-columns: 160px minmax(0, 1fr); padding: 20px; }
+  .card { grid-template-columns: 160px minmax(0, 1fr); align-items: center; padding: 20px; }
   .card dl { font-size: 0.875rem; }
   .card a { display: inline-flex; align-items: center; min-height: 44px; }
   .card a[href^="mailto:"] { display: block; padding-block: 8px; line-height: 1.6; }
@@ -1733,9 +1733,11 @@ pre:focus-visible { outline-offset: -3px; }
 @media (max-width: 30rem) {
   .page { padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
   .nav-in { padding-inline: max(16px, env(safe-area-inset-left)) max(16px, env(safe-area-inset-right)); }
-  .card { display: block; margin-top: 24px; }
-  .card img { width: min(100%, 240px); height: auto; aspect-ratio: 1; margin-bottom: 24px; }
+  .card { display: block; margin-top: 24px; text-align: center; }
+  .card img { width: min(100%, 240px); height: auto; aspect-ratio: 1; margin: 0 auto 24px; }
   .card h1 { font-size: 1.5rem; }
+  .card .status { display: block; }
+  .card .status::before { display: inline-block; margin-right: 10px; vertical-align: middle; }
   .takes { columns: 1; }
   .takes-h { margin-top: 16px; }
   .sec { margin-top: 32px; padding-top: 40px; }
