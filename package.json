@@ -1,6 +1,12 @@
 {
   "name": "marco-graziano-portfolio",
   "private": true,
-  "scripts": { "test": "node tests/accessibility.cjs" },
+  "scripts": {
+    "test": "npm run test:seo && npm run test:a11y",
+    "test:seo": "node tests/seo.cjs",
+    "test:a11y": "node tests/accessibility.cjs",
+    "build:social": "node scripts/generate-social-images.cjs",
+    "build:portrait": "node scripts/optimize-portrait.cjs"
+  },
   "devDependencies": { "axe-core": "^4.10.3", "playwright": "^1.58.2" }
 }

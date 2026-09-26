@@ -1,4 +1,6 @@
-/* Shared navigation. All destinations remain visible when JavaScript is off. */
+/* Runs immediately after the navigation, before main content is parsed, so
+   collapsing the enhanced mobile menu cannot move already-painted content.
+   All destinations remain visible when JavaScript is off or fails to load. */
 (function () {
   var nav = document.querySelector('.nav');
   var toggle = document.querySelector('.nav-toggle');
@@ -60,7 +62,7 @@
 })();
 
 /* WebKit does not consistently route arrow keys to focused overflow groups. */
-(function () {
+document.addEventListener('DOMContentLoaded', function () {
   document.querySelectorAll('pre[tabindex], .measure-visual[tabindex]').forEach(function (panel) {
     panel.addEventListener('keydown', function (event) {
       if (event.target !== panel || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
@@ -70,4 +72,4 @@
       panel.scrollLeft += (event.key === 'ArrowRight' ? 1 : -1) * Math.max(40, panel.clientWidth / 8);
     });
   });
-})();
+});

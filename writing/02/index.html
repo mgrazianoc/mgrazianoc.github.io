@@ -3,13 +3,122 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>You're Paying for Someone Else's Problem · Marco Graziano · v10</title>
-<meta name="description" content="When good practices turn out to be our biggest problem.">
+<title>You're Paying for Someone Else's Problem · Marco Graziano</title>
+<meta name="description" content="The hidden runtime cost of software defaults, from garbage collection to Rust allocations, memory layout, and producer-consumer handoffs.">
+<meta name="author" content="Marco Graziano">
+<meta name="robots" content="max-image-preview:large">
+<link rel="canonical" href="https://mgrazianoc.github.io/writing/02/">
+<link rel="icon" href="/assets/favicon.png" type="image/png" sizes="48x48">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" sizes="any">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" sizes="180x180">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Marco Graziano">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="You're Paying for Someone Else's Problem">
+<meta property="og:description" content="The hidden runtime cost of software defaults, from garbage collection to Rust allocations, memory layout, and producer-consumer handoffs.">
+<meta property="og:url" content="https://mgrazianoc.github.io/writing/02/">
+<meta property="og:image" content="https://mgrazianoc.github.io/assets/social/someone-elses-problem.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="You're Paying for Someone Else's Problem by Marco Graziano, with a pixel cat choosing a cardboard box over a cat tower.">
+<meta property="article:author" content="https://mgrazianoc.github.io/">
+<meta property="article:section" content="Performance engineering">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="You're Paying for Someone Else's Problem">
+<meta name="twitter:description" content="The hidden runtime cost of software defaults, from garbage collection to Rust allocations, memory layout, and producer-consumer handoffs.">
+<meta name="twitter:image" content="https://mgrazianoc.github.io/assets/social/someone-elses-problem.png">
+<meta name="twitter:image:alt" content="You're Paying for Someone Else's Problem by Marco Graziano, with a pixel cat choosing a cardboard box over a cat tower.">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": "https://mgrazianoc.github.io/#person",
+      "name": "Marco Graziano",
+      "url": "https://mgrazianoc.github.io/",
+      "jobTitle": "Independent performance engineer",
+      "image": "https://mgrazianoc.github.io/assets/marco-graziano.jpg",
+      "sameAs": [
+        "https://github.com/mgrazianoc",
+        "https://www.linkedin.com/in/magcastro/"
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://mgrazianoc.github.io/writing/02/#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://mgrazianoc.github.io/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Writing",
+          "item": "https://mgrazianoc.github.io/writing/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 3,
+          "name": "You're Paying for Someone Else's Problem",
+          "item": "https://mgrazianoc.github.io/writing/02/"
+        }
+      ]
+    },
+    {
+      "@type": "BlogPosting",
+      "@id": "https://mgrazianoc.github.io/writing/02/#article",
+      "url": "https://mgrazianoc.github.io/writing/02/",
+      "headline": "You're Paying for Someone Else's Problem",
+      "description": "The hidden runtime cost of software defaults, from garbage collection to Rust allocations, memory layout, and producer-consumer handoffs.",
+      "inLanguage": "en",
+      "author": {
+        "@id": "https://mgrazianoc.github.io/#person"
+      },
+      "publisher": {
+        "@id": "https://mgrazianoc.github.io/#person"
+      },
+      "mainEntityOfPage": {
+        "@id": "https://mgrazianoc.github.io/writing/02/#webpage"
+      },
+      "isPartOf": {
+        "@id": "https://mgrazianoc.github.io/#website"
+      },
+      "image": {
+        "@type": "ImageObject",
+        "url": "https://mgrazianoc.github.io/writing/02/if-it-fits.webp",
+        "width": 1024,
+        "height": 434
+      }
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://mgrazianoc.github.io/writing/02/#webpage",
+      "url": "https://mgrazianoc.github.io/writing/02/",
+      "name": "You're Paying for Someone Else's Problem · Marco Graziano",
+      "description": "The hidden runtime cost of software defaults, from garbage collection to Rust allocations, memory layout, and producer-consumer handoffs.",
+      "inLanguage": "en",
+      "isPartOf": {
+        "@id": "https://mgrazianoc.github.io/#website"
+      },
+      "breadcrumb": {
+        "@id": "https://mgrazianoc.github.io/writing/02/#breadcrumb"
+      },
+      "mainEntity": {
+        "@id": "https://mgrazianoc.github.io/writing/02/#article"
+      }
+    }
+  ]
+}
+</script>
 <meta name="theme-color" content="#0b0c0e">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;450;500;560&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../../styles.css?v=15">
-<script src="../../site.js?v=11" defer></script>
+<link rel="preload" href="/assets/fonts/ibm-plex-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../../styles.css?v=16">
+<link rel="preload" href="../../site.js?v=12" as="script">
 </head>
 <body>
 <a class="skip-link" href="#main-content">Skip to content</a>
@@ -29,12 +138,13 @@
     <a class="nav-cta" href="../../#contact">Get in touch</a>
   </div>
 </nav>
+<script src="../../site.js?v=12"></script>
 
 <main class="page page-note" id="main-content" tabindex="-1">
 
   <article class="note">
     <a class="note-back" href="../">All notes</a>
-    <p class="note-kicker">02 / 02</p>
+    <p class="note-kicker">02 / 02 · By <a href="../../" rel="author">Marco Graziano</a></p>
     <h1>You're Paying for Someone Else's Problem</h1>
     <p class="dek">When good practices turn out to be our biggest problem</p>
     <figure class="note-banner">

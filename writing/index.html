@@ -3,13 +3,102 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Writing · Marco Graziano · v10</title>
-<meta name="description" content="Notes on performance, concurrency, and measurement from recurring systems work.">
+<title>Performance Engineering Writing · Marco Graziano</title>
+<meta name="description" content="Notes by Marco Graziano on performance engineering, Rust, concurrency, memory layout, and measurement, drawn from recurring systems work.">
+<meta name="author" content="Marco Graziano">
+<meta name="robots" content="max-image-preview:large">
+<link rel="canonical" href="https://mgrazianoc.github.io/writing/">
+<link rel="icon" href="/assets/favicon.png" type="image/png" sizes="48x48">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" sizes="any">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png" sizes="180x180">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Marco Graziano">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="Performance Engineering Writing · Marco Graziano">
+<meta property="og:description" content="Notes by Marco Graziano on performance engineering, Rust, concurrency, memory layout, and measurement, drawn from recurring systems work.">
+<meta property="og:url" content="https://mgrazianoc.github.io/writing/">
+<meta property="og:image" content="https://mgrazianoc.github.io/assets/social/writing.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Notes from the hot path — writing on performance, concurrency, and measurement by Marco Graziano.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Performance Engineering Writing · Marco Graziano">
+<meta name="twitter:description" content="Notes by Marco Graziano on performance engineering, Rust, concurrency, memory layout, and measurement, drawn from recurring systems work.">
+<meta name="twitter:image" content="https://mgrazianoc.github.io/assets/social/writing.png">
+<meta name="twitter:image:alt" content="Notes from the hot path — writing on performance, concurrency, and measurement by Marco Graziano.">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Person",
+      "@id": "https://mgrazianoc.github.io/#person",
+      "name": "Marco Graziano",
+      "url": "https://mgrazianoc.github.io/",
+      "jobTitle": "Independent performance engineer",
+      "image": "https://mgrazianoc.github.io/assets/marco-graziano.jpg",
+      "sameAs": [
+        "https://github.com/mgrazianoc",
+        "https://www.linkedin.com/in/magcastro/"
+      ]
+    },
+    {
+      "@type": "BreadcrumbList",
+      "@id": "https://mgrazianoc.github.io/writing/#breadcrumb",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://mgrazianoc.github.io/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Writing",
+          "item": "https://mgrazianoc.github.io/writing/"
+        }
+      ]
+    },
+    {
+      "@type": "CollectionPage",
+      "@id": "https://mgrazianoc.github.io/writing/#webpage",
+      "url": "https://mgrazianoc.github.io/writing/",
+      "name": "Performance Engineering Writing · Marco Graziano",
+      "description": "Notes by Marco Graziano on performance engineering, Rust, concurrency, memory layout, and measurement, drawn from recurring systems work.",
+      "inLanguage": "en",
+      "isPartOf": {
+        "@id": "https://mgrazianoc.github.io/#website"
+      },
+      "breadcrumb": {
+        "@id": "https://mgrazianoc.github.io/writing/#breadcrumb"
+      },
+      "mainEntity": {
+        "@type": "ItemList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "The Cliffhanger: Performance Engineering",
+            "url": "https://mgrazianoc.github.io/writing/01/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "You're Paying for Someone Else's Problem",
+            "url": "https://mgrazianoc.github.io/writing/02/"
+          }
+        ]
+      }
+    }
+  ]
+}
+</script>
 <meta name="theme-color" content="#0b0c0e">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;450;500;560&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="../styles.css?v=15">
-<script src="../site.js?v=11" defer></script>
+<link rel="preload" href="/assets/fonts/ibm-plex-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="../styles.css?v=16">
+<link rel="preload" href="../site.js?v=12" as="script">
 </head>
 <body>
 <a class="skip-link" href="#main-content">Skip to content</a>
@@ -29,6 +118,7 @@
     <a class="nav-cta" href="../#contact">Get in touch</a>
   </div>
 </nav>
+<script src="../site.js?v=12"></script>
 
 <main class="page page-writing" id="main-content" tabindex="-1">
 
