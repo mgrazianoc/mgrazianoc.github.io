@@ -40,11 +40,12 @@
   --headTop: 44px;
   --radius: 2px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --safe-top: env(safe-area-inset-top, 0px);
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; scroll-padding-top: var(--nav-offset, 76px); color-scheme: dark; }
+html { scroll-behavior: smooth; scroll-padding-top: var(--nav-offset, 76px); color-scheme: dark; background-color: var(--bg); }
 
 body {
   color: var(--ink);
@@ -88,10 +89,24 @@ body::before {
   top: 0;
   z-index: 100;
   min-height: 52px;
+  padding-top: var(--safe-top);
   border-bottom: 1px solid var(--line2);
   background: rgba(11, 12, 14, 0.86);
   -webkit-backdrop-filter: blur(14px);
   backdrop-filter: blur(14px);
+}
+
+/* Cover the iPhone status-bar inset, including the area above Safari's
+   sticky-header edge as its browser controls expand and collapse. */
+.nav::before {
+  content: "";
+  position: absolute;
+  top: calc(0px - var(--safe-top));
+  right: 0;
+  left: 0;
+  height: calc(2 * var(--safe-top));
+  background: var(--bg);
+  pointer-events: none;
 }
 
 .nav-in {
@@ -1610,13 +1625,13 @@ h3 {
 .skip-link {
   position: fixed;
   z-index: 1100;
-  top: 12px;
+  top: calc(12px + var(--safe-top));
   left: 16px;
   padding: 12px 18px;
   color: var(--bg);
   background: var(--hot);
   font-weight: 560;
-  transform: translateY(calc(-100% - 20px));
+  transform: translateY(calc(-100% - 20px - var(--safe-top)));
 }
 .skip-link:focus { transform: none; }
 main:focus { outline: none; }
@@ -1675,7 +1690,7 @@ pre:focus-visible { outline-offset: -3px; }
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 0 12px;
     padding: 6px max(20px, env(safe-area-inset-right)) 6px max(20px, env(safe-area-inset-left));
-    max-height: 100svh;
+    max-height: calc(100svh - var(--safe-top));
     overflow-y: auto;
   }
   .nav a { font-size: 0.8125rem; line-height: 1.5; white-space: normal; }
@@ -1755,9 +1770,9 @@ pre:focus-visible { outline-offset: -3px; }
   .nav-cta { border-color: LinkText; }
   .skip-link { background: Canvas; color: LinkText; }
 }
-.site-footer { max-width: 1100px; width: calc(100% - 80px); margin-inline: auto; }
-@media (max-width: 60rem) { .site-footer { width: calc(100% - 40px); } }
-@media (max-width: 30rem) { .site-footer { width: calc(100% - 32px); } }
+.site-footer { max-width: 1100px; width: calc(100% - 80px); margin-inline: auto; padding-bottom: calc(var(--u) * 6 + env(safe-area-inset-bottom, 0px)); }
+@media (max-width: 60rem) { .site-footer { width: calc(100% - max(20px, env(safe-area-inset-left)) - max(20px, env(safe-area-inset-right))); } }
+@media (max-width: 30rem) { .site-footer { width: calc(100% - max(16px, env(safe-area-inset-left)) - max(16px, env(safe-area-inset-right))); } }
 /* Long words, addresses, and decoration must also reflow with custom text spacing. */
 .page, .nav, .site-footer { overflow-wrap: anywhere; }
 .bits { white-space: normal; overflow-wrap: anywhere; }
