@@ -37,6 +37,7 @@ Add a card to `scripts/generate-social-images.cjs`, then run:
 ```sh
 npm run build:social
 npm run build:portrait # only when the original photograph changes
+npm run build:llms
 npm test
 ```
 
@@ -51,6 +52,10 @@ coverage, unique metadata, canonical consistency, structured data relationships,
 social-image dimensions, authorship, local assets, internal links and fragments,
 mobile overflow, and 404 behavior. `npm run test:a11y` runs the browser accessibility
 suite; `BROWSER=webkit npm run test:a11y` uses WebKit.
+
+The site also publishes `llms.txt`, a complete-text bundle, and Markdown versions
+generated from the canonical HTML pages. See [LLM discovery](LLM-DISCOVERY.md)
+for the file map, discovery links, content-fidelity checks, and update workflow.
 
 ## After deployment
 

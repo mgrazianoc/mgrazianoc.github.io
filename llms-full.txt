@@ -1,0 +1,621 @@
+# Marco Graziano — complete site text
+
+> Generated from the published HTML pages. Each section identifies its canonical source.
+
+## Marco Graziano
+
+> Independent performance engineer specializing in production Rust: tail latency, allocators, concurrency, and memory layout. Available for remote engagements.
+
+Author: [Marco Graziano](https://mgrazianoc.github.io/).
+Canonical page: [https://mgrazianoc.github.io/](https://mgrazianoc.github.io/).
+Site guide: [llms.txt](https://mgrazianoc.github.io/llms.txt).
+
+![Marco Graziano](https://mgrazianoc.github.io/assets/marco-graziano-764.webp)
+
+performance engineer
+
+**Location**
+
+São Paulo, BR · UTC−3
+
+**Email**
+
+[mgrazianodecastro@gmail.com](mailto:mgrazianodecastro@gmail.com)
+
+**Profiles**
+
+[github](https://github.com/mgrazianoc) · [linkedin](https://www.linkedin.com/in/magcastro/)
+
+Available · fixed-scope engagements
+
+The hot path is the product.\
+**The rest waits on it.**
+
+I work on the hot path in production Rust: tail latency, allocators, and concurrency. Sometimes that means finding what a team has spent a quarter failing to reproduce. Sometimes it means designing the path before there is anything to reproduce.
+
+What I take on
+
+-   Latency forensics
+-   Concurrency review
+-   Lock-free and allocator work
+-   Benchmark harnesses that CI can gate on
+
+Modeled latency under load: the mean stays steady while the slowest requests take much longer to recover.
+
+### Common symptoms
+
+Before anything gets profiled, the shape has already narrowed the search. These are the ones I keep meeting, and what each one usually turns out to be.
+
+distribution
+
+#### Two modes
+
+One population is taking a different path: a cache that misses, a branch that falls back, a second allocator. The mean lands between the two humps and describes nothing that actually happens.
+
+#### A tail that won't close
+
+The body is tight and the right side runs for decades of latency. Almost always queueing or contention, not slow code. p50 will keep looking healthy the entire time this is happening.
+
+#### A pile at the edge
+
+Everything above some value got clipped: a timeout, a truncated histogram bucket, a load generator that stopped sending while it waited. The tail you're missing is the one you need.
+
+over time
+
+#### Sawtooth
+
+Something accumulates and is released all at once. Page decay, compaction, a buffer filling, a lease expiring. The slope tells you the fill rate and the drop tells you the period.
+
+#### A comb
+
+Regular spikes on a fixed interval mean a timer, not load. Flush, checkpoint, metrics scrape, leader renewal. The interval usually names the culprit before any profiling starts.
+
+#### Steps under load
+
+Latency holds flat, then jumps to a new floor and holds again. Each step is a resource reaching saturation. Between steps nothing you change will move the number.
+
+Symptoms drawn from models, not from any client system. Yours will be messier and will usually be a mix of two of these.
+
+### What I measure
+
+CPU time is only the part that was running. I also measure where work waited, who woke it, what stayed allocated, and where the pages landed.
+
+on CPU
+
+#### Running
+
+Diagram: Temporal CPU heat field linked to an on-CPU flame graph.
+
+FlameScope isolates the bad interval; the flame graph identifies the stack consuming it.
+
+off CPU
+
+#### Waiting
+
+Diagram: Off-CPU flame graph weighted by blocked time.
+
+An off-CPU flame graph assigns blocked time to the stack that stopped.
+
+handoffs
+
+#### Waking
+
+Diagram: Sparse waker by target matrix weighted by blocked time.
+
+A waker × target matrix shows who released whom, weighted by the target's blocked time.
+
+lifetimes
+
+#### Retained
+
+Diagram: Allocation cohort tracks showing short and retained lifetimes.
+
+Allocation lifetimes distinguish normal churn from memory that never returns.
+
+address space
+
+#### Mapped
+
+Diagram: Address-space mappings with page residency and fault activity.
+
+Mappings, residency, page size and NUMA placement expose faults hidden above the allocator.
+
+Modeled instruments, not client captures.
+
+### How I work
+
+One thread runs through all four: the hot path and the harness that proves what it does. The difference is when you bring me in.
+
+Before the code exists
+
+#### Hot path design
+
+You are building the thing, not fixing it. I design the path the data actually travels: memory layout, concurrency model, and wire format. I build enough of it to prove it holds; your team owns everything around it.
+
+You get
+
+-   The design, with its tradeoffs written down
+-   A reference implementation of the hot path
+-   A load harness running in CI from day one
+-   The failure modes to watch for, named early
+
+When the tail shows up
+
+#### Latency audit
+
+I start from the shape of your distribution rather than from the code. What it looks like idle, what it looks like under load, and what moved between the two. The shape cuts the search down to a few mechanisms; measurement decides which one it is.
+
+You get
+
+-   A reproduction you can run on demand
+-   The mechanism, measured, not a guess
+-   Fixes ranked by gain against effort
+-   The harness left behind, yours to keep
+
+Once you know what to change
+
+#### Fix and prove
+
+Scoped and quoted after the audit. I implement what the audit found, in your codebase, next to your team. Every change lands with the before and after on the same harness, so the shape you started with stays on the record.
+
+You get
+
+-   The changes, reviewed by your engineers
+-   Benchmarks CI can fail a build on
+-   Before and after on the same harness
+-   A written record of what moved and why
+
+For as long as it ships
+
+#### Standing capacity
+
+For teams shipping on a hot path continuously. A fixed number of days a month, booked ahead, so the distribution gets watched between incidents instead of only after one.
+
+You get
+
+-   Design review before the code exists
+-   Hot-path and unsafe-block review
+-   Regression triage when a number moves
+-   Same-week response, in your timezone
+
+**Scope** Engagements are scoped individually. We start with a conversation about the workload, the symptoms, and the constraints. Where further investigation is needed to establish scope, I propose a bounded paid diagnostic. Implementation is quoted separately.\
+**Contracting** B2B through my Brazilian entity. Invoiced in USD.\
+**Start** Usually two weeks out.\
+**Scope call** 45 minutes, free, no deck.\
+
+### Systems
+
+Where the work has been.
+
+#### Dados Technology
+
+Industrial IoT streams transformed in real time at millions of messages per second, under sub-second latency requirements.
+
+#### Alloha Fibra
+
+A shared service layer connecting dozens of heterogeneous systems across a merged group of regional ISPs, with latency instrumented by route group.
+
+#### conDati
+
+Cross-platform marketing analytics pipelines with per-customer backfills ranging from gigabytes to terabytes beneath a feature rules engine.
+
+### Upstream
+
+Merged into Apache Arrow's Swift implementation.
+
+apache/arrow-swift
+
+[Timestamp data type](https://github.com/apache/arrow-swift/pull/33)
+
+apache/arrow-swift #33 · merged Jun 2025
+
+Array, builder and all four precision units, with timezone handling across the C data interface.
+
+[List data types](https://github.com/apache/arrow-swift/pull/39)
+
+apache/arrow-swift #39 · merged Nov 2025
+
+Nested lists end to end: type, array, builder, buffer builder and reader, plus a rename of the struct type to match the rest of the codebase.
+
+Merged downstream into apache/spark-connect-swift (SPARK-54892)
+
+### Writing
+
+General arguments from recurring systems work, not from any one system.
+
+-   [The Cliffhanger: Performance Engineering](https://mgrazianoc.github.io/writing/01/)
+
+    Between bottlenecks and deadlines, the system is still 10x behind.
+
+-   [You're Paying for Someone Else's Problem](https://mgrazianoc.github.io/writing/02/)
+
+    When good practices turn out to be our biggest problem
+
+
+[All notes](https://mgrazianoc.github.io/writing/)
+
+### The hot path is the work\ I take.
+
+[mgrazianodecastro@gmail.com](mailto:mgrazianodecastro@gmail.com)
+
+São Paulo, BR · UTC−3 · remote\
+Fixed-scope engagements, B2B\
+[github](https://github.com/mgrazianoc) [linkedin](https://www.linkedin.com/in/magcastro/)
+
+---
+
+## Writing
+
+> Notes by Marco Graziano on performance engineering, Rust, concurrency, memory layout, and measurement, drawn from recurring systems work.
+
+Author: [Marco Graziano](https://mgrazianoc.github.io/).
+Canonical page: [https://mgrazianoc.github.io/writing/](https://mgrazianoc.github.io/writing/).
+Site guide: [llms.txt](https://mgrazianoc.github.io/llms.txt).
+
+General arguments from recurring systems work, not from any one system.
+
+-   [The Cliffhanger: Performance Engineering](https://mgrazianoc.github.io/writing/01/): Between bottlenecks and deadlines, the system is still 10x behind.
+-   [You're Paying for Someone Else's Problem](https://mgrazianoc.github.io/writing/02/): When good practices turn out to be our biggest problem
+
+### The hot path is the work\ I take.
+
+[mgrazianodecastro@gmail.com](mailto:mgrazianodecastro@gmail.com)
+
+São Paulo, BR · UTC−3 · remote\
+Fixed-scope engagements, B2B\
+[github](https://github.com/mgrazianoc) [linkedin](https://www.linkedin.com/in/magcastro/)
+
+---
+
+## The Cliffhanger: Performance Engineering
+
+> Why systems stay 10x behind after the obvious optimizations: tail latency, misleading benchmarks, and the hard part of performance engineering.
+
+Author: [Marco Graziano](https://mgrazianoc.github.io/).
+Canonical page: [https://mgrazianoc.github.io/writing/01/](https://mgrazianoc.github.io/writing/01/).
+Site guide: [llms.txt](https://mgrazianoc.github.io/llms.txt).
+
+Between bottlenecks and deadlines, the system is still 10x behind.
+
+![A pixel cat hanging from a wire. Hanging in there.](https://mgrazianoc.github.io/writing/01/hanging-in-there.webp)
+
+Faster is awesome, and most companies will never have to worry about improving performance beyond hundreds of milliseconds. For the cases that do care, it usually boils down to two scenarios:
+
+-   the company is trying to penetrate a market by offering a competitive product, or service, whose main difference is its performance; or
+-   the company is on a train that will not stop, and it will crash into huge bills, poor user experience, or even worse: software that never runs.
+
+Take, for example, some companies that in the past had to deal with performance in order for their product to remain competitive in the market.
+
+**Google**: their search engine not only had to carry good features for retrieving good results, but it also had to be fast. If their page spent too much time "thinking", well, there was a good chance the user would just give up. The index could be perfect; if the path was slow, then it was not a search. That is their product.
+
+**Apple**: when John Doerr saw the product for the first time, Steve Jobs said "this device nearly broke the company". What was so good about it? Smoothness. Nothing back in the day ever felt like that. The tactile response time behaved like the physical world, at least compared to human perception. It was not the first "smartphone", but it was the first one that ever felt good enough.
+
+**Nasdaq**: a big B2B failure case. On May 18, 2012, Facebook's IPO day, before any trading could even start, the exchange had to make sure they correctly computed the opening price from every single order. If someone canceled while they were computing, they had to compute everything again. At first, this looked like a simple sum / subtraction problem. They had tested it with 40,000 orders. But that day, they got almost 500,000. People just kept canceling, and the system kept starting over. As a consequence, trading opened half an hour late, and market makers spent hours not knowing which of their trades had gone through. The brokers claimed almost [$500 million in losses](https://www.investmentnews.com/nasdaq-to-pay-10-million-to-settle-sec-facebook-case-51723)...
+
+`ipo_cross.rs`
+
+```rust
+// Nasdaq's IPO cross, more or less.
+// Tested with 40_000 orders. Works on my machine.
+loop {
+    let cross = compute_opening_cross(&book);
+    if book.no_cancellations_since(&cross) {
+        break; // surely people stop canceling at some point
+    }
+}
+open_trading();
+```
+
+### At first...
+
+Everything feels straightforward to tackle. Improving a SQL query, some network logic, algorithm optimizations, the everyday bread and butter. "Everything will be ready within the scheduled deadline." After a few tries and some handmade benchmarks, the harsh reality of software engineering shatters right in our face. We've tried everything we knew right off the top of our heads. Everything a solid senior engineer has learned throughout their career. All the best practices. All the experience. EVERYTHING. Yet... the system is not even 10% there.
+
+And that's just for what was measured. In scenarios where the mean is not the only number that matters (it never is), p99+ quantiles are poorly understood monsters. Their radical behavior?
+
+> Ohh, that's OS jitter...
+
+Yes, OS jitter. Let's just ignore the bizarre multimodal distribution the system has... which cannot even hold stable over time.
+
+At this point, for those companies, performance engineering starts becoming a real term. Coding suddenly switches from making code recognizable by humans, and easy to digest, to something the machine doesn't have to juggle just to move variables around. Those tiny but furious lines of code scare you at first, but it soon clicks. Full-batch end-to-end software that runs in microseconds is extremely hard to build.
+
+![A pixel progress window. Optimizing. Time remaining: 2 sprints.](https://mgrazianoc.github.io/writing/01/optimizing.webp)
+
+### Then desperation
+
+Now what? The first deadline felt brutal, but the last milestone is even harder. And for the love of Turing, I hope no new features come up along the way, right? ... Right? From building a somewhat stable benchmark to closing the remaining 10x, it feels impossible.
+
+Of course, something that's already optimized can't get much faster, wouldn't you think? Hmm... actually, not really. You would be surprised, as I am every time I take a crack at a challenge, by how much of the software we write is extremely bad.
+
+Here's the thing: the machine is absurdly fast. Billions of cycles per second, and a good chunk of them go to nothing useful. Things like waiting on memory, recomputing what didn't change, copying data just so the types line up, waiting for instructions, locking resources that shouldn't even be locked, allocating inside the hot loop, over and over. And the most ridiculous part: none of it shows up at the surface level, because all the code looks fine. And that's usually where the missing 10x, 100x, even 1000x is hiding.
+
+Finding it is the hard part, and that's what the next articles are all about.
+
+Until then... hang in there!
+
+### Terminology
+
+- **penetrate a market**: Get customers in a market that already has sellers. You take share from whoever is already there.
+- **John Doerr**: A Kleiner Perkins partner. Early money in Google, Amazon, Netscape.
+- **p99+**: The slow one percent, and worse. The mean can look fine the entire time these are happening.
+- **OS jitter**: The kernel stopping your process for a bit: a timer, a schedule, another thread. The clock moved. Your function did not.
+- **multimodal**: The latency is not one population. Any number of blobs, each a different path.
+
+### Related writing
+
+- [You're Paying for Someone Else's Problem](https://mgrazianoc.github.io/writing/02/)
+
+---
+
+## You're Paying for Someone Else's Problem
+
+> The hidden runtime cost of software defaults, from garbage collection to Rust allocations, memory layout, and producer-consumer handoffs.
+
+Author: [Marco Graziano](https://mgrazianoc.github.io/).
+Canonical page: [https://mgrazianoc.github.io/writing/02/](https://mgrazianoc.github.io/writing/02/).
+Site guide: [llms.txt](https://mgrazianoc.github.io/llms.txt).
+
+When good practices turn out to be our biggest problem
+
+![Pixel art: an elaborate cat tower with a price tag stands unused, while a cat sleeps happily in a plain cardboard box. Text: If it fits, I sits.](https://mgrazianoc.github.io/writing/02/if-it-fits.webp)
+
+Almost every line of code you run carries an opinion, and most of them are not yours. They came from a library author, a conference talk, a language designer, someone who had a completely different problem than the one sitting on your desk right now. Their opinion was probably right. For them. You still pay for it, on every call, inside a loop you have never looked at.
+
+Let's start with where those opinions come from.
+
+### Everyone is right, and that is the problem
+
+You see, becoming a Software Engineer is one of the most frustrating paths out there. A big reason for that feeling is the fact that there are so many different ways of achieving similar goals. Start with the fact that one has to decide between a set of languages. Is C better than Rust? Python over R? What about Java? Should I switch to Go? As developers, often and inevitably, we end up trying everything, always convincing ourselves we have found the best way of writing software.
+
+And it doesn't stop there. The paradigms that carry the code structure also become subject to taste and, of course, to experience. Someone who has written OOP their whole life, well, has a lot more fun writing abstract classes than someone coming from procedural code, or functional code, or whatever it is as long as it composes. And to make matters worse, the disagreements scale.
+
+To do defensive programming or not. To do inline comments or not. To do documentation or not. To CamelCase or not.
+
+> To be or not to be...
+
+Here's the part nobody puts on the slide: every one of those opinions ships with a bill attached, and the bill is paid at runtime, by you.
+
+### On the other end of the spectrum
+
+Performance Engineering, on the other hand, has a much more grounded baseline for what matters in good software. The means become opaque. The ends have the final word. And what are the ends? Metrics. Numbers, the most boring, gray and ruthless non-emotional beings. At least, if you ignore what mathematicians say.
+
+Latency, throughput, bandwidth, overhead, the yada yada yada. They are basically saying out loud where the system performs, or, as we see in most cases, underperforms. If you have ever heard of terms like `tokens / sec` or `cost / token`, those are just examples of important metrics in the world of LLMs. These numbers are brutal. Hard to control, hard to be happy with, and most of the time, hard to beat.
+
+One thing that comes from being in a long-term relationship with these numbers is that almost all software written out there carries opinions which are not the best fit for the context it ended up in. Best practices are better known for making software a commodity: you saw this pattern once, you have read similar code many times, and even though this is not your code, you immediately understand it. The problem? Nothing in life comes free. It's an exchange between readability, maintainability and ergonomics against the system's performance. And the worst kind of tradeoff: the silent kind.
+
+### A bill, with a name on it
+
+In 2020, Discord [told the story](https://discord.com/blog/why-discord-is-switching-from-go-to-rust) of a service called Read States. Its job was simple: to keep track of which channels and messages users have read. Because of how the app works, the service was hit every time a user connects, every time a message is sent, and every time a message is read. Truly a marvelous hot path, as hot as they get.
+
+It was written in Go, and for most of its job, it was more than good enough. Most of the time, at least. It had a peculiar problem: every couple of minutes, latency just decided to spike. More regular than an atomic clock, it was always there. In such a hot environment, everything pointed at some memory management hitting hard.
+
+After investigation, the team concluded the culprit for the spikes was none other than the Garbage Collector itself. The service barely produced any garbage, but that was not the point. Even in such a highly optimized system, the GC still had to walk the entire LRU cache, every cycle, just to prove that memory was still referenced. And the clock-like schedule? Go forces a collection at least once every two minutes, garbage or not. Since data lived in memory most of the time, they experimented by making the cache smaller, and the spikes got smaller too. But the tradeoff: the 99th percentile got worse, since the system was now missing the hot data, triggering a new trip to the database.
+
+Trading one number for another, and getting nowhere.
+
+A tracing collector's work grows with how much memory is alive, not with how much garbage you make. And Read States kept almost everything alive. So it paid, every two minutes, for as long as it ran on Go.
+
+They rewrote it in Rust. With only basic optimization, it beat the hand-tuned Go version on latency, CPU and memory.
+
+Rust doesn't make you immune, though. It just moves the opinions out of the runtime and into your types.
+
+### Hands on a practical example
+
+Let's build something small. A data processing pipeline, in a single service. Events coming in, structured data comes out. In this scenario, we are gonna tackle the problem of handing off messages / events from a thread to another, let's call them the `producer` and the `consumer` threads, using some sort of in between structure, such as a channel or a ring buffer.
+
+For the first prototype, we start with semantics. It's what everyone writes. It's what I write too. A `struct` whose purpose is to mimic the human comprehension. An event is a well defined set of attributes, including the `topic` of subscription, the `payload` carrying the data, and well, the instant we've `received_at`.
+
+`event_v1.rs`
+
+```rust
+struct Event {
+    topic: String,          // heap
+    payload: Vec<u8>,       // heap
+    received_at: Instant,
+}
+```
+
+Can you imagine that, just by placing this structure within our system, we are already under-performing by a real margin? Not the sort of thing that "saves memory" or "speeds up by 10ms at scale". No. We are talking about the sort of performance costs, derived from a human perspective on how software should look, that quietly eat a big slice of your per-event budget, and turn crossing the margin **of a million events per second, per core**, into a fight. Just by that simple structure.
+
+> But... why?
+
+Well, software syntax is a deceiving thing that hides a lot. Without the simplification of these languages, we would basically be writing code directly for the machine. And between common practices and limitations, some assumptions inevitably become hidden.
+
+First, for that structure to even exist, the program must ask the allocator for a couple of allocations: one for `topic`, and another one for `payload`, both on the heap. The rest lives inline, wherever the struct itself happens to be. When the `consumer` thread receives that structure, it now owns it, heap data included, becoming responsible for freeing memory in a thread that didn't allocate it in the first place. This is the textbook scenario allocators like the least: they can handle it, but it's never free.
+
+On a typical x86-64 Linux build (the compiler is free to reorder the fields), the memory layout looks like this:
+
+Event memory layout: a 64-byte struct with alignment padding between fields.
+
+```text
+ off  Event (64 bytes, align 8)
+      +-------------------------+
+   0  | topic.ptr         8 B   |---->  [ heap: topic bytes ]
+   8  | topic.cap         8 B   |
+  16  | topic.len         8 B   |
+      +-------------------------+
+  24  | payload.ptr       8 B   |---->  [ heap: payload bytes ]
+  32  | payload.cap       8 B   |
+  40  | payload.len       8 B   |
+      +-------------------------+
+  48  | received_at.secs  8 B   |
+  56  | received_at.nanos 4 B   |
+  60  | (padding)         4 B   |
+      +-------------------------+
+  64
+```
+
+If we assume that a small allocation on the heap costs about 10-50ns, the two allocations land around 20-100ns per event, and freeing them costs about the same again. At a million events per second on a single core, the whole budget is 1µs per event. That's up to a fifth of it spent doing basically nothing, just... managing memory!
+
+Another problem is alignment, though not the kind the compiler worries about. Rust makes sure every field of `Event` is properly aligned, so reading a field is always cheap and predictable. But the CPU doesn't think in fields, it thinks in 64-byte cache lines. Our struct is exactly 64 bytes, yet it's only guaranteed to start on an 8-byte boundary. Put a few of them in a buffer, and unless you're lucky about where that buffer begins, every single event straddles two cache lines.
+
+Cache lines: an unaligned 64-byte event spans two adjacent cache lines.
+
+```text
+ cache line   +---------------+---------------+---------------+
+              |    line 0     |    line 1     |    line 2     |
+              +---------------+---------------+---------------+
+ events           +---------------+---------------+---------------+
+                  |     ev[0]     |     ev[1]     |     ev[2]     |
+                  +---------------+---------------+---------------+
+
+    buffer starts 16 B into a line: every event touches two lines
+```
+
+Worse, when the `producer` writes one slot while the `consumer` reads the one next to it, both cores fight over the same line, invalidating each other's cache on every write. It's called false sharing, and it's the kind of cost you'll never see in the code. It doesn't look like much, again, but every move between CPU and memory compounds over time.
+
+And that's before following the pointers. The data we actually care about isn't even in the struct:
+
+Heap indirection: the event points to a topic string and a separately allocated payload.
+
+```text
+    Event (somewhere)          heap
+    +--------------+           +-----------------+
+    | topic     ---+---------->| "sensors/temp"  |
+    | payload   ---+-------+   +-----------------+
+    | received_at  |       |   +-----------------+
+    +--------------+       +-->| 4a 1f 00 ...    |
+                               +-----------------+
+
+    three places in memory, for one event
+```
+
+From here, it depends on one thing: how big is the payload? Case one: it's small. Sensor readings, price ticks, heartbeats. Hurray! If it fits, it sits: the whole event can fit in a single cache line. No heap, no pointers, nothing to chase.
+
+`event_v2.rs`
+
+```rust
+#[repr(C, align(64))]
+struct Event {
+    received_at: u64,       //  8  nanos since start
+    topic: u16,             //  2  interned at startup
+    len: u16,               //  2
+    payload: [u8; 52],      // 52  inline
+}
+
+const _: () = assert!(size_of::<Event>() == 64);
+```
+
+Three things changed. First, the topic became a `u16`. Every topic we know about is stored once, in a table we build at startup, and the event just carries its index. That's called interning, and it turns comparing topics into a two-byte compare instead of walking a string. The catch is that the topics have to be known upfront, or the table has to grow at runtime.
+
+Topic lookup: numeric topic identifiers refer to strings in a table built once at startup.
+
+```text
+ topic table (built once at startup)
+ +---+------------------+
+ | 0 | "orders/created" |
+ | 1 | "orders/paid"    |
+ | 2 | "sensors/humid"  |
+ | 3 | "sensors/temp"   |  <--  event.topic = 3
+ +---+------------------+
+```
+
+Second, the `Instant` became plain nanoseconds since the service started. Third, the payload moved inside the struct, as a fixed 52-byte array. And `repr(C, align(64))` pins it all down: the bytes sit in the order I wrote them, not in the order the compiler felt like, and every event owns exactly one cache line, with no straddling and no false sharing between neighbors.
+
+Inline event: timestamp, topic, length, and a 52-byte payload fit in one 64-byte cache line.
+
+```text
+ 0          8       10      12                                      64
+ +----------+-------+-------+---------------------------------------+
+ | recv_at  | topic |  len  |  payload (52 B, inline)               |
+ +----------+-------+-------+---------------------------------------+
+ |<-------------------- one cache line (64 B) --------------------->|
+
+ one place in memory. one cache line.
+```
+
+Zero allocations. Zero pointers to follow. One event, one cache line. The price is right there in the type: 52 bytes of payload and not one byte more. A 4-byte event still burns the whole 64, and you traded that memory for the allocator, on purpose.
+
+Case two: the payload is big. Not hurray. A 1 KB payload will never fit in a cache line, and dragging it along every time we route or filter an event would undo everything we just won. So the struct stops carrying the payload and starts describing it. The same move pays off even for small payloads, by the way, if most of the time you're routing and filtering and never actually reading the bytes.
+
+`event_v3.rs`
+
+```rust
+#[repr(C)]
+struct Event {
+    received_at: u64,
+    topic: u16,
+    len: u16,
+    off: u32,               // running position in the arena, never resets
+}
+
+const _: () = assert!(size_of::<Event>() == 16);
+
+struct MyCustomArena { /* one big allocation, handed out by offset */ }
+```
+
+So what's an arena? It's one big block of memory, allocated once at startup, that we manage ourselves. Instead of asking the allocator for room every time a payload arrives, we copy the bytes into the next free spot and move a cursor forward. That's the whole allocation: an addition. Nothing gets freed one by one either. Here, the arena works like a ring: the writer keeps moving forward, wraps back to the start when it hits the end, and reuses the space the reader has already moved past.
+
+Ring arena: the reader follows the writer through one preallocated block; the writer wraps at the end.
+
+```text
+ arena: one allocation, made once at startup
+ +---------+-------------+---------+---------------------+
+ | bytes 0 | bytes 1     | bytes 2 |        free         |
+ +---------+-------------+---------+---------------------+
+ ^                                 ^
+ reader                            writer
+
+ the writer only moves forward. at the end, it wraps to the start.
+```
+
+Back to the struct: same fields as v2. The payload turned into an offset plus the `len` that was already sitting there, and the bytes moved into the arena. When the reader hasn't caught up and there's no room left, the arena hands back nothing. That "nothing" is your drop policy. And `off` never resets: it keeps counting as the arena wraps around, and the real position is just `off` modulo the arena size. If the writer has already lapped an event's `off`, those bytes belong to someone else now, and the reader can tell with a single comparison, instead of silently reading garbage. That's the reason this thing doesn't corrupt data.
+
+Dense events: four 16-byte event descriptors fit per cache line and point to payloads in an arena.
+
+```text
+ events: dense array, 16 B each
+ +-----------+-----------+-----------+---
+ | ev[0]     | ev[1]     | ev[2]     | ...
+ | off, len  | off, len  | off, len  |
+ +-----------+-----------+-----------+---
+ |           |           |
+ v           v           v
+ +-----------+-----------+-----------+---
+ | payload 0 | payload 1 | payload 2 | ...
+ +-----------+-----------+-----------+---
+ arena: one allocation at startup, each payload written once
+
+ one cache line: exactly 4 events
+```
+
+Sixteen bytes. Four events per cache line, none of them straddling. Routing by topic, sorting by timestamp, batching by length: all of that now runs over a dense array, and the payload isn't dragged along for the ride. You walk into the arena only when you actually need the bytes.
+
+And the two cases aren't a choice. Keep the bytes inline when they fit, point into the arena when they don't: Apache Arrow's `StringView` does exactly that, in 16 bytes.
+
+Zoom out, and this is the whole machine. The `producer` takes events in, writes the bytes into the arena, and pushes a 16-byte descriptor into a ring buffer. The `consumer` pops descriptors, and follows them into the arena only when it actually needs the bytes.
+
+Producer and consumer: a ring carries 16-byte descriptors while a separate shared arena holds the payload bytes.
+
+```text
+   ingress                ring: 16 B descriptors                process
+ +----------+    +-------+-------+-------+-------+-------+    +----------+
+ | producer |--->| ev[5] | ev[6] | ev[7] |       |       |--->| consumer |
+ +----------+    +-------+-------+-------+-------+-------+    +----------+
+      |           ^ read                  ^ write                  |
+      |                                                            |
+      |                +-----------------------------+             |
+      +--------------->|   arena: payload bytes      |<------------+
+        writes         +-----------------------------+      reads
+
+ the ring says what to do next. the arena holds what to do it with.
+```
+
+Kind of crazy? It's how your network card already talks to the kernel: a ring of small descriptors pointing into preallocated buffers. Linux's AF\_XDP exposes almost exactly this shape, and so does DPDK. We didn't invent anything, we just stopped hiding it behind a `String`.
+
+It has a limitation, though. A ring-shaped arena assumes events are consumed roughly in order. If the `consumer` holds on to some payloads much longer than others, the writer can't move past them, and new events start getting dropped behind them. When that's your workload, a pool of fixed-size buffers, handed out and returned in any order, fits better. That's the route DPDK takes.
+
+Three structs. Nobody got smarter, nothing got "optimized". We just stopped paying for decisions someone else made for us.
+
+### Concluding
+
+The software you have must be built for what it is intended to do. That sounds obvious until you go looking for who decided what your code does on every call, and find out it was a stranger, solving a problem you don't have.
+
+So when someone finally digs into the stack, the traces and the system, the result is usually not a clever new layer. It's a subtraction. Less indirection, fewer copies, fewer defaults nobody asked for.
+
+Which raises the question for the next article: how do you find them?
+
+Turns out the cat had it right all along. The tower is what we build for each other: it looks designed, it reads well, and it comes with a price tag. The box looks like nothing. Cruder, maybe even harder to read. But the machine doesn't care what looks good to us. It sits where it fits. The tower was never the point.
+
+### Related writing
+
+- [The Cliffhanger: Performance Engineering](https://mgrazianoc.github.io/writing/01/)

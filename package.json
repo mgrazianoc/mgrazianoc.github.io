@@ -2,12 +2,21 @@
   "name": "marco-graziano-portfolio",
   "private": true,
   "scripts": {
-    "test": "npm run test:analytics && npm run test:seo && npm run test:a11y",
+    "test": "npm run check:llms && npm run test:llms && npm run test:analytics && npm run test:seo && npm run test:a11y",
+    "build:llms": "node scripts/build-llms.cjs",
+    "check:llms": "node scripts/build-llms.cjs --check",
+    "test:llms": "node --test tests/llms.cjs",
     "test:analytics": "node --test tests/analytics.cjs",
     "test:seo": "node tests/seo.cjs",
     "test:a11y": "node tests/accessibility.cjs",
     "build:social": "node scripts/generate-social-images.cjs",
     "build:portrait": "node scripts/optimize-portrait.cjs"
   },
-  "devDependencies": { "axe-core": "^4.10.3", "playwright": "^1.58.2" }
+  "devDependencies": {
+    "axe-core": "^4.10.3",
+    "linkedom": "0.18.13",
+    "marked": "18.0.14",
+    "playwright": "^1.58.2",
+    "turndown": "7.2.4"
+  }
 }
